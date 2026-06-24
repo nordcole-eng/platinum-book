@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Platinum Book — Homeopathic Remedy Library</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+  --bg: #0f1117; --surface: #1a1d27; --surface2: #242836;
+  --border: #2e3348; --text: #e4e6ef; --text2: #9298b0;
+  --accent: #7c6cf0; --accent2: #9d8df7; --accent-bg: rgba(124,108,240,.08);
+  --green: #4ade80; --amber: #fbbf24; --teal: #2dd4bf; --rose: #fb7185;
+}
+body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+.app { display: flex; height: 100vh; }
+
+/* --- Sidebar --- */
+.sidebar {
+  width: 280px; min-width: 280px; background: var(--surface);
+  border-right: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden;
+}
+.sidebar-header {
+  padding: 16px 20px; border-bottom: 1px solid var(--border); cursor: pointer;
+  transition: background .15s;
+}
+.sidebar-header:hover { background: var(--surface2); }
+.sidebar-header h1 { font-size: 17px; font-weight: 700; margin-bottom: 2px; }
+.sidebar-header p { font-size: 11px; color: var(--text2); }
+
+.letter-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; padding: 10px 14px; }
+.letter-btn {
+  background: var(--surface2); border: 1px solid var(--border); color: var(--text2);
+  border-radius: 6px; padding: 5px 0; text-align: center; cursor: pointer;
+  font-size: 12px; font-weight: 600; transition: all .15s;
+}
+.letter-btn:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
+.letter-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+.letter-btn.empty { opacity: .3; pointer-events: none; }
+
+.nav-tabs { display: flex; border-bottom: 1px solid var(--border); padding: 0 14px; }
+.nav-tab {
+  padding: 9px 10px; font-size: 11px; font-weight: 600; color: var(--text2);
+  cursor: pointer; border-bottom: 2px solid transparent; text-transform: uppercase;
+  letter-spacing: .5px; transition: all .15s;
+}
+.nav-tab:hover { color: var(--text); }
+.nav-tab.active { color: var(--accent2); border-bottom-color: var(--accent); }
+
+.sidebar-list { flex: 1; overflow-y: auto; padding: 6px; }
+.sidebar-item {
+  padding: 8px 10px; border-radius: 6px; cursor: pointer;
+  font-size: 12px; margin-bottom: 1px; transition: background .1s;
+  display: flex; justify-content: space-between; align-items: center;
+}
+.sidebar-item:hover { background: var(--surface2); }
+.sidebar-item.active { background: var(--accent-bg); color: var(--accent2); }
+.sidebar-item .tag { color: var(--text2); font-size: 10px; flex-shrink: 0; margin-left: 8px; }
+
+/* --- Main --- */
+.main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+.search-bar {
+  padding: 14px 24px; border-bottom: 1px solid var(--border);
+  display: flex; gap: 12px; align-items: center;
+}
+.search-wrap { flex: 1; position: relative; }
+.search-input {
+  width: 100%; background: var(--surface); border: 1px solid var(--border);
+  border-radius: 8px; padding: 10px 16px 10px 38px; color: var(--text);
+  font-size: 14px; outline: none; transition: border .15s;
+}
+.search-input:focus { border-color: var(--accent); }
+.search-input::placeholder { color: var(--text2); }
+.search-icon {
+  position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+  color: var(--text2); font-size: 14px; pointer-events: none;
+}
+.search-clear {
+  position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+  background: var(--surface2); border: none; color: var(--text2); cursor: pointer;
+  width: 20px; height: 20px; border-radius: 50%; font-size: 12px;
+  display: none; align-items: center; justify-content: center;
+}
+.search-clear.show { display: flex; }
+.result-count { font-size: 12px; color: var(--text2); white-space: nowrap; }
+
+.content { flex: 1; overflow-y: auto; padding: 24px; }
+.content-inner { max-width: 920px; margin: 0 auto; }
+
+/* --- Home Page --- */
+.home { padding: 40px 0; }
+.home-hero { text-align: center; margin-bottom: 40px; }
+.home-hero h2 { font-size: 32px; font-weight: 800; margin-bottom: 8px; }
+.home-hero p { color: var(--text2); font-size: 15px; max-width: 520px; margin: 0 auto; }
+
+.stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 36px; }
+.stat-card {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+  padding: 16px; text-align: center;
+}
+.stat-num { font-size: 28px; font-weight: 800; color: var(--accent2); }
+.stat-label { font-size: 11px; color: var(--text2); text-transform: uppercase; letter-spacing: .5px; margin-top: 4px; }
+
+.home-section { margin-bottom: 28px; }
+.home-section h3 { font-size: 14px; font-weight: 700; color: var(--text2); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 12px; }
+.quick-letters { display: flex; flex-wrap: wrap; gap: 6px; }
+.quick-letter {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+  padding: 8px 14px; cursor: pointer; font-weight: 600; font-size: 14px;
+  transition: all .15s; display: flex; align-items: center; gap: 8px;
+}
+.quick-letter:hover { border-color: var(--accent); background: var(--accent-bg); }
+.quick-letter .ql-count { font-size: 11px; color: var(--text2); font-weight: 400; }
+
+.quick-searches { display: flex; flex-wrap: wrap; gap: 8px; }
+.quick-search {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 20px;
+  padding: 6px 16px; cursor: pointer; font-size: 13px; color: var(--text2);
+  transition: all .15s;
+}
+.quick-search:hover { border-color: var(--accent); color: var(--accent2); }
+
+/* --- Search Results (Compact/Expandable) --- */
+.search-section-label {
+  font-size: 12px; font-weight: 700; color: var(--accent2); text-transform: uppercase;
+  letter-spacing: .5px; margin: 16px 0 10px; padding-bottom: 6px;
+  border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;
+}
+.show-all-btn {
+  background: var(--surface2); border: 1px solid var(--border); color: var(--text2);
+  border-radius: 6px; padding: 4px 12px; font-size: 11px; cursor: pointer; transition: all .15s;
+}
+.show-all-btn:hover { border-color: var(--accent); color: var(--accent2); }
+
+.compact-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 10px; margin-bottom: 6px; transition: border-color .15s; cursor: pointer;
+  overflow: hidden;
+}
+.compact-card:hover { border-color: var(--accent); }
+.compact-card.expanded { border-color: var(--accent); }
+.compact-header {
+  display: flex; align-items: center; gap: 10px; padding: 12px 16px;
+}
+.compact-letter {
+  background: var(--accent); color: #fff; width: 24px; height: 24px;
+  border-radius: 5px; display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 700; flex-shrink: 0;
+}
+.compact-name { font-size: 14px; font-weight: 600; flex: 1; }
+.compact-desc { font-size: 12px; color: var(--text2); margin-top: 2px; font-weight: 400; }
+.compact-meta { display: flex; gap: 6px; align-items: center; flex-shrink: 0; }
+.compact-count {
+  background: var(--surface2); border-radius: 4px; padding: 2px 7px;
+  font-size: 10px; color: var(--text2);
+}
+.compact-sources { display: flex; gap: 3px; }
+.compact-arrow {
+  color: var(--text2); font-size: 12px; transition: transform .2s; margin-left: 4px;
+}
+.compact-card.expanded .compact-arrow { transform: rotate(90deg); }
+.compact-body {
+  max-height: 0; overflow: hidden; transition: max-height .3s ease;
+}
+.compact-card.expanded .compact-body { max-height: 2000px; }
+.compact-body-inner {
+  padding: 0 16px 14px 16px; border-top: 1px solid var(--border);
+}
+.compact-original {
+  margin-top: 8px; padding: 8px 12px; background: var(--surface2); border-radius: 6px;
+  font-size: 11px; color: var(--text2); white-space: pre-wrap; display: none; line-height: 1.5;
+}
+.compact-original.show { display: block; }
+.toggle-original {
+  background: none; border: none; color: var(--text2); cursor: pointer;
+  font-size: 10px; padding: 4px 0; margin-top: 6px; text-decoration: underline;
+  transition: color .15s;
+}
+.toggle-original:hover { color: var(--accent2); }
+
+/* --- Full Cards (letter browse) --- */
+.card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 12px; padding: 20px; margin-bottom: 14px;
+  transition: border-color .15s;
+}
+.card:hover { border-color: var(--accent); }
+.card-header {
+  display: flex; align-items: center; gap: 10px; margin-bottom: 14px;
+}
+.card-letter {
+  background: var(--accent); color: #fff; width: 28px; height: 28px;
+  border-radius: 6px; display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 700; flex-shrink: 0;
+}
+.card-condition { font-size: 16px; font-weight: 700; }
+.card-desc { font-size: 13px; color: var(--text2); margin-top: 2px; font-weight: 400; }
+.card-sources { display: flex; gap: 5px; flex-wrap: wrap; margin-left: auto; }
+.source-tag {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 4px; padding: 2px 7px; font-size: 10px; color: var(--text2); cursor: help;
+}
+
+.remedy-entry {
+  margin-bottom: 8px; margin-left: 38px; background: var(--accent-bg);
+  border-left: 3px solid var(--accent); border-radius: 0 10px 10px 0;
+  padding: 10px 14px; font-size: 13px; line-height: 1.55;
+}
+.remedy-entry:last-child { margin-bottom: 0; }
+.remedy-entry.crossref {
+  border-left-color: var(--amber); background: rgba(251,191,36,.06);
+  font-style: italic; color: var(--text2);
+}
+.remedy-entry.note-line {
+  border-left-color: var(--teal); background: rgba(45,212,191,.06);
+}
+
+.re-row { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: baseline; }
+.re-name { font-weight: 600; color: var(--text); }
+.re-potency { color: var(--amber); font-weight: 600; font-size: 12px; }
+.re-dose {
+  background: rgba(45,212,191,.12); color: var(--teal); border-radius: 4px;
+  padding: 1px 7px; font-size: 11px; font-weight: 600;
+}
+.re-admin { color: var(--text2); font-size: 12px; margin-top: 3px; flex-basis: 100%; }
+
+.highlight { background: rgba(251,191,36,.3); border-radius: 2px; padding: 0 1px; }
+
+/* --- Reference --- */
+.ref-section { margin-bottom: 32px; }
+.ref-section h3 { font-size: 15px; font-weight: 700; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+.ref-table { width: 100%; border-collapse: collapse; }
+.ref-table th, .ref-table td { text-align: left; padding: 9px 12px; font-size: 13px; border-bottom: 1px solid var(--border); }
+.ref-table th { color: var(--text2); font-weight: 600; font-size: 10px; text-transform: uppercase; letter-spacing: .5px; }
+.ref-table tr:hover td { background: var(--accent-bg); }
+
+@media (max-width: 768px) {
+  .sidebar { display: none; }
+  .stats-row { grid-template-columns: repeat(2, 1fr); }
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="sidebar">
+    <div class="sidebar-header" id="homeBtn">
+      <h1>&#9883; Platinum Book</h1>
+      <p>Homeopathic Remedy Library</p>
+    </div>
+    <div class="letter-grid" id="letterGrid"></div>
+    <div class="nav-tabs">
+      <div class="nav-tab active" data-tab="conditions">Conditions</div>
+      <div class="nav-tab" data-tab="reference">Reference</div>
+    </div>
+    <div class="sidebar-list" id="sidebarList"></div>
+  </div>
+  <div class="main">
+    <div class="search-bar">
+      <div class="search-wrap">
+        <span class="search-icon">&#128269;</span>
+        <input class="search-input" id="searchInput" placeholder="Search conditions, remedies, or symptoms..." autofocus>
+        <button class="search-clear" id="searchClear">&times;</button>
+      </div>
+      <span class="result-count" id="resultCount"></span>
+    </div>
+    <div class="content" id="content">
+      <div class="content-inner" id="contentInner"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+let DATA = null;
+let activeLetter = null;
+let activeTab = 'conditions';
+let currentView = 'home';
+
+fetch('remedies_data.json').then(r => r.json()).then(d => { DATA = d; init(); });
+
+function init() {
+  buildLetterGrid();
+  document.getElementById('homeBtn').addEventListener('click', goHome);
+  document.querySelectorAll('.nav-tab').forEach(t => t.addEventListener('click', () => switchTab(t.dataset.tab)));
+  const input = document.getElementById('searchInput');
+  input.addEventListener('input', debounce(onSearch, 200));
+  input.addEventListener('keydown', e => { if (e.key === 'Escape') { input.value = ''; onSearch(); } });
+  document.getElementById('searchClear').addEventListener('click', () => { input.value = ''; onSearch(); input.focus(); });
+  goHome();
+}
+
+function goHome() {
+  currentView = 'home';
+  activeLetter = null;
+  document.querySelectorAll('.letter-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('searchInput').value = '';
+  document.getElementById('searchClear').classList.remove('show');
+  document.getElementById('resultCount').textContent = '';
+  document.getElementById('sidebarList').innerHTML = '';
+  renderHome();
+}
+
+function buildLetterGrid() {
+  const grid = document.getElementById('letterGrid');
+  const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+  const hasData = new Set(DATA.remedies.map(r => r.letter));
+  grid.innerHTML = letters.map(l =>
+    `<div class="letter-btn ${hasData.has(l) ? '' : 'empty'}" data-letter="${l}">${l}</div>`
+  ).join('');
+  grid.addEventListener('click', e => {
+    const btn = e.target.closest('.letter-btn');
+    if (!btn || btn.classList.contains('empty')) return;
+    if (activeLetter === btn.dataset.letter) { goHome(); return; }
+    selectLetter(btn.dataset.letter);
+  });
+}
+
+function selectLetter(letter) {
+  activeLetter = letter;
+  currentView = 'letter';
+  document.getElementById('searchInput').value = '';
+  document.getElementById('searchClear').classList.remove('show');
+  document.querySelectorAll('.letter-btn').forEach(b => b.classList.toggle('active', b.dataset.letter === letter));
+  activeTab = 'conditions';
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === 'conditions'));
+  showConditionsForLetter(letter);
+}
+
+function switchTab(tab) {
+  activeTab = tab;
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+  if (tab === 'reference') showReference();
+  else if (activeLetter) showConditionsForLetter(activeLetter);
+  else goHome();
+}
+
+// --- Condition Name Parsing ---
+function parseConditionName(raw) {
+  let name = raw, desc = '';
+  const dashIdx = raw.indexOf(' - ');
+  const parenIdx = raw.indexOf('(');
+  if (dashIdx > 0 && (parenIdx < 0 || dashIdx < parenIdx)) {
+    name = raw.substring(0, dashIdx).trim();
+    desc = raw.substring(dashIdx + 3).trim();
+  } else if (parenIdx > 0 && raw.endsWith(')')) {
+    name = raw.substring(0, parenIdx).trim();
+    desc = raw.substring(parenIdx + 1, raw.length - 1).trim();
+  } else if (parenIdx > 0) {
+    const closeIdx = raw.indexOf(')', parenIdx);
+    if (closeIdx > parenIdx && closeIdx === raw.length - 1) {
+      name = raw.substring(0, parenIdx).trim();
+      desc = raw.substring(parenIdx + 1, closeIdx).trim();
+    }
+  }
+  name = name.replace(/[,\s]+$/, '');
+  return { name, desc, original: raw };
+}
+
+// --- Remedy Parsing ---
+function parseRemedy(text) {
+  const t = text.trim();
+  if (/^see\s/i.test(t) || /^also\s*see/i.test(t)) return { type: 'crossref', text: t };
+  if (/^(if |also |note|for |when |do not|continue|add |important|symptoms|the |this |after |before |during |\d+\.\s)/i.test(t) && !/\d+[cxCX]\b/.test(t))
+    return { type: 'note', text: t };
+
+  const potencyRe = /\b(\d+[cxCX](?:\b|,)|(?:MT|CM|\d+M)\b|\d+CK\b)/;
+  let name = '', potency = '', dose = '', admin = '';
+  const pm = t.match(potencyRe);
+  if (pm) {
+    const idx = t.indexOf(pm[0]);
+    name = t.substring(0, idx).replace(/[\s,]+$/, '').trim();
+    const rest = t.substring(idx);
+    potency = pm[0];
+    const afterPotency = rest.substring(pm[0].length).trim().replace(/^[,\s]+/, '');
+    const doses = [];
+    const doseRe2 = /\b(e?\d*[HD]|eH|eoD|SOS|e\d+H|e\d+D|\d+D|\d+H|e\d+min|until VMB|as needed)\b/gi;
+    let dm;
+    while ((dm = doseRe2.exec(afterPotency)) !== null) doses.push(dm[0]);
+    dose = doses.join(', ');
+    admin = afterPotency;
+    for (const d of doses) admin = admin.replace(d, '').trim();
+    admin = admin.replace(/^[,.\s]+|[,.\s]+$/g, '').trim();
+  } else {
+    name = t;
+  }
+  if (!name && !potency) return { type: 'note', text: t };
+  return { type: 'remedy', name, potency, dose, admin: admin || '' };
+}
+
+function renderParsedRemedy(parsed, query) {
+  if (parsed.type === 'crossref')
+    return `<div class="remedy-entry crossref">${hl(parsed.text, query)}</div>`;
+  if (parsed.type === 'note')
+    return `<div class="remedy-entry note-line">${hl(parsed.text, query)}</div>`;
+  let html = '<div class="remedy-entry"><div class="re-row">';
+  if (parsed.name) html += `<span class="re-name">${hl(parsed.name, query)}</span>`;
+  if (parsed.potency) html += `<span class="re-potency">${hl(parsed.potency, query)}</span>`;
+  if (parsed.dose) html += `<span class="re-dose">${parsed.dose}</span>`;
+  html += '</div>';
+  if (parsed.admin) html += `<div class="re-admin">${hl(parsed.admin, query)}</div>`;
+  html += '</div>';
+  return html;
+}
+
+function getRemedyLines(item) {
+  const lines = [];
+  for (const r of item.remedies) {
+    for (const sl of r.split('\n').filter(s => s.trim())) lines.push(sl);
+  }
+  return lines;
+}
+
+// --- Search Relevance Scoring ---
+function scoreResult(item, ql) {
+  let score = 0;
+  const cond = item.condition.toLowerCase();
+  if (cond === ql) score += 100;
+  else if (cond.startsWith(ql)) score += 80;
+  else if (cond.includes(ql)) score += 60;
+  const remedyMatch = item.remedies.some(r => r.toLowerCase().includes(ql));
+  if (remedyMatch && score === 0) score += 20;
+  else if (remedyMatch) score += 10;
+  if (item.remedies.length > 3) score += 5;
+  const condWords = cond.split(/[\s,\-()]+/).filter(Boolean);
+  if (condWords.length <= 4) score += 3;
+  return score;
+}
+
+// --- Search Results (Compact) ---
+function renderSearchResults(results, query) {
+  const inner = document.getElementById('contentInner');
+  const ql = query.toLowerCase();
+
+  const scored = results.map(r => ({ item: r, score: scoreResult(r, ql) }));
+  scored.sort((a, b) => b.score - a.score);
+
+  const top = scored.slice(0, 10);
+  const rest = scored.slice(10);
+
+  let html = '';
+  if (top.length) {
+    html += `<div class="search-section-label">Top ${Math.min(10, scored.length)} Matches</div>`;
+    html += top.map((s, i) => renderCompactCard(s.item, query, `top-${i}`)).join('');
+  }
+  if (rest.length) {
+    html += `<div class="search-section-label">All Results (${rest.length} more)
+      <button class="show-all-btn" id="showAllBtn">Show All</button></div>`;
+    html += `<div id="restResults" style="display:none;">`;
+    html += rest.slice(0, 100).map((s, i) => renderCompactCard(s.item, query, `rest-${i}`)).join('');
+    if (rest.length > 100) {
+      html += `<div style="text-align:center;padding:16px;color:var(--text2);font-size:13px;">
+        + ${rest.length - 100} more results. Refine your search for better matches.</div>`;
+    }
+    html += `</div>`;
+  }
+
+  inner.innerHTML = html;
+  document.getElementById('resultCount').textContent = `${results.length} result${results.length !== 1 ? 's' : ''}`;
+
+  // Wire expand/collapse
+  inner.querySelectorAll('.compact-card').forEach(card => {
+    card.querySelector('.compact-header').addEventListener('click', () => {
+      card.classList.toggle('expanded');
+    });
+  });
+
+  // Wire show all
+  const showAllBtn = document.getElementById('showAllBtn');
+  if (showAllBtn) {
+    showAllBtn.addEventListener('click', () => {
+      const el = document.getElementById('restResults');
+      const showing = el.style.display !== 'none';
+      el.style.display = showing ? 'none' : 'block';
+      showAllBtn.textContent = showing ? 'Show All' : 'Hide';
+      if (!showing) {
+        el.querySelectorAll('.compact-card').forEach(card => {
+          card.querySelector('.compact-header').addEventListener('click', () => {
+            card.classList.toggle('expanded');
+          });
+        });
+      }
+    });
+  }
+
+  // Wire original toggles
+  inner.querySelectorAll('.toggle-original').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      const orig = btn.nextElementSibling;
+      const showing = orig.classList.contains('show');
+      orig.classList.toggle('show');
+      btn.textContent = showing ? 'Show original text' : 'Hide original text';
+    });
+  });
+}
+
+function renderCompactCard(item, query, id) {
+  const parsed = parseConditionName(item.condition);
+  const lines = getRemedyLines(item);
+  const originalText = item.remedies.join('\n');
+
+  return `
+  <div class="compact-card" data-id="${id}">
+    <div class="compact-header">
+      <span class="compact-letter">${item.letter}</span>
+      <div style="flex:1;min-width:0;">
+        <div class="compact-name">${hl(parsed.name, query)}</div>
+        ${parsed.desc ? `<div class="compact-desc">${hl(parsed.desc, query)}</div>` : ''}
+      </div>
+      <div class="compact-meta">
+        ${item.sources.length ? `<div class="compact-sources">${item.sources.slice(0,2).map(s =>
+          `<span class="source-tag" title="${escAttr(getAbbrevTitle(s))}">${s}</span>`).join('')}</div>` : ''}
+        <span class="compact-count">${lines.length} remedy${lines.length !== 1 ? 's' : ''}</span>
+        <span class="compact-arrow">&#9654;</span>
+      </div>
+    </div>
+    <div class="compact-body">
+      <div class="compact-body-inner">
+        ${lines.map(r => renderParsedRemedy(parseRemedy(r), query)).join('')}
+        <button class="toggle-original">Show original text</button>
+        <div class="compact-original">${escHtml(originalText)}</div>
+      </div>
+    </div>
+  </div>`;
+}
+
+// --- Full Cards (letter browse) ---
+function renderCards(items, query) {
+  const inner = document.getElementById('contentInner');
+  document.getElementById('resultCount').textContent = `${items.length} condition${items.length !== 1 ? 's' : ''}`;
+  const show = items.slice(0, 50);
+  let html = show.map(item => {
+    const parsed = parseConditionName(item.condition);
+    const lines = getRemedyLines(item);
+    return `
+    <div class="card">
+      <div class="card-header">
+        <span class="card-letter">${item.letter}</span>
+        <div>
+          <div class="card-condition">${hl(parsed.name, query)}</div>
+          ${parsed.desc ? `<div class="card-desc">${hl(parsed.desc, query)}</div>` : ''}
+        </div>
+        ${item.sources.length ? `<div class="card-sources">${item.sources.map(s =>
+          `<span class="source-tag" title="${escAttr(getAbbrevTitle(s))}">${s}</span>`).join('')}</div>` : ''}
+      </div>
+      ${lines.map(r => renderParsedRemedy(parseRemedy(r), query)).join('')}
+    </div>`;
+  }).join('');
+  if (items.length > 50) {
+    html += `<div style="text-align:center;padding:20px;">
+      <button id="loadMoreBtn" style="background:var(--accent);color:#fff;border:none;border-radius:8px;padding:10px 28px;cursor:pointer;font-size:14px;font-weight:600;">
+        Show More (${items.length - 50} remaining)
+      </button></div>`;
+  }
+  inner.innerHTML = html;
+  if (items.length > 50) {
+    document.getElementById('loadMoreBtn').addEventListener('click', () => {
+      const all = items.map(item => {
+        const parsed = parseConditionName(item.condition);
+        const lines = getRemedyLines(item);
+        return `
+        <div class="card">
+          <div class="card-header">
+            <span class="card-letter">${item.letter}</span>
+            <div>
+              <div class="card-condition">${hl(parsed.name, query)}</div>
+              ${parsed.desc ? `<div class="card-desc">${hl(parsed.desc, query)}</div>` : ''}
+            </div>
+            ${item.sources.length ? `<div class="card-sources">${item.sources.map(s =>
+              `<span class="source-tag" title="${escAttr(getAbbrevTitle(s))}">${s}</span>`).join('')}</div>` : ''}
+          </div>
+          ${lines.map(r => renderParsedRemedy(parseRemedy(r), query)).join('')}
+        </div>`;
+      }).join('');
+      inner.innerHTML = all;
+    });
+  }
+}
+
+function showConditionsForLetter(letter) {
+  const items = DATA.remedies.filter(r => r.letter === letter);
+  const list = document.getElementById('sidebarList');
+  list.innerHTML = items.map((item, i) => {
+    const p = parseConditionName(item.condition);
+    return `<div class="sidebar-item" data-idx="${i}"><span>${truncate(p.name, 32)}</span><span class="tag">${item.remedies.length}</span></div>`;
+  }).join('');
+  list.querySelectorAll('.sidebar-item').forEach(el => {
+    el.addEventListener('click', () => {
+      list.querySelectorAll('.sidebar-item').forEach(e => e.classList.remove('active'));
+      el.classList.add('active');
+      renderCards([items[+el.dataset.idx]]);
+      document.getElementById('content').scrollTop = 0;
+    });
+  });
+  renderCards(items);
+}
+
+// --- Home Page ---
+function renderHome() {
+  const letterCounts = {};
+  DATA.remedies.forEach(r => { letterCounts[r.letter] = (letterCounts[r.letter] || 0) + 1; });
+  const totalRemedyLines = DATA.remedies.reduce((s, r) => s + r.remedies.length, 0);
+  const letters = Object.keys(letterCounts).sort();
+
+  document.getElementById('contentInner').innerHTML = `
+    <div class="home">
+      <div class="home-hero">
+        <h2>Platinum Book</h2>
+        <p>A comprehensive homeopathic remedy reference. Browse by letter, search by condition or remedy name, or explore the reference guides below.</p>
+      </div>
+      <div class="stats-row">
+        <div class="stat-card"><div class="stat-num">${DATA.remedies.length.toLocaleString()}</div><div class="stat-label">Conditions</div></div>
+        <div class="stat-card"><div class="stat-num">${totalRemedyLines.toLocaleString()}</div><div class="stat-label">Remedy Lines</div></div>
+        <div class="stat-card"><div class="stat-num">${letters.length}</div><div class="stat-label">Letter Sections</div></div>
+        <div class="stat-card"><div class="stat-num">${DATA.cell_salts.length}</div><div class="stat-label">Cell Salt Combos</div></div>
+      </div>
+      <div class="home-section">
+        <h3>Browse by Letter</h3>
+        <div class="quick-letters">
+          ${letters.map(l => `<div class="quick-letter" data-letter="${l}">${l}<span class="ql-count">${letterCounts[l]}</span></div>`).join('')}
+        </div>
+      </div>
+      <div class="home-section">
+        <h3>Common Searches</h3>
+        <div class="quick-searches">
+          ${['Headache','Fever','Cough','Anxiety','Pain','Insomnia','Nausea','Allergy','Skin','Infection','Burns','Flu'].map(s =>
+            `<div class="quick-search" data-q="${s}">${s}</div>`).join('')}
+        </div>
+      </div>
+      <div class="home-section">
+        <h3>Reference Guides</h3>
+        <div class="quick-searches">
+          <div class="quick-search" data-ref="abbr">Abbreviation Guide</div>
+          <div class="quick-search" data-ref="pot">Potencies</div>
+          <div class="quick-search" data-ref="cs">Cell Salt Combinations</div>
+        </div>
+      </div>
+    </div>`;
+
+  document.querySelectorAll('.quick-letter').forEach(el => {
+    el.addEventListener('click', () => selectLetter(el.dataset.letter));
+  });
+  document.querySelectorAll('.quick-search[data-q]').forEach(el => {
+    el.addEventListener('click', () => {
+      document.getElementById('searchInput').value = el.dataset.q;
+      onSearch();
+    });
+  });
+  document.querySelectorAll('.quick-search[data-ref]').forEach(el => {
+    el.addEventListener('click', () => {
+      switchTab('reference');
+      if (el.dataset.ref === 'abbr') renderReference('Abbreviations');
+      else if (el.dataset.ref === 'pot') renderReference('Potencies');
+      else renderReference('Cell Salts');
+    });
+  });
+}
+
+// --- Search (top priority) ---
+function onSearch() {
+  const q = document.getElementById('searchInput').value.trim();
+  const clearBtn = document.getElementById('searchClear');
+  clearBtn.classList.toggle('show', q.length > 0);
+
+  if (!q) {
+    if (activeLetter) showConditionsForLetter(activeLetter);
+    else goHome();
+    return;
+  }
+
+  activeLetter = null;
+  currentView = 'search';
+  document.querySelectorAll('.letter-btn').forEach(b => b.classList.remove('active'));
+
+  const ql = q.toLowerCase();
+  const results = DATA.remedies.filter(r =>
+    r.condition.toLowerCase().includes(ql) ||
+    r.remedies.some(rem => rem.toLowerCase().includes(ql))
+  );
+
+  renderSearchResults(results, q);
+
+  const list = document.getElementById('sidebarList');
+  const scored = results.map(r => ({ item: r, score: scoreResult(r, ql) }));
+  scored.sort((a, b) => b.score - a.score);
+  list.innerHTML = scored.slice(0, 150).map((s, i) => {
+    const p = parseConditionName(s.item.condition);
+    return `<div class="sidebar-item" data-idx="${i}"><span>${truncate(p.name, 28)}</span><span class="tag">${s.item.letter}</span></div>`;
+  }).join('');
+  const sortedItems = scored.map(s => s.item);
+  list.querySelectorAll('.sidebar-item').forEach(el => {
+    el.addEventListener('click', () => {
+      list.querySelectorAll('.sidebar-item').forEach(e => e.classList.remove('active'));
+      el.classList.add('active');
+      renderCards([sortedItems[+el.dataset.idx]], q);
+      document.getElementById('content').scrollTop = 0;
+    });
+  });
+}
+
+// --- Reference ---
+function showReference() {
+  const list = document.getElementById('sidebarList');
+  list.innerHTML = ['Abbreviations','Potencies','Cell Salts'].map(s =>
+    `<div class="sidebar-item" data-ref="${s}"><span>${s}</span></div>`
+  ).join('');
+  list.querySelectorAll('.sidebar-item').forEach(el => {
+    el.addEventListener('click', () => {
+      list.querySelectorAll('.sidebar-item').forEach(e => e.classList.remove('active'));
+      el.classList.add('active');
+      renderReference(el.dataset.ref);
+    });
+  });
+  renderAllReference();
+}
+function renderAllReference() {
+  document.getElementById('contentInner').innerHTML = buildAbbrTable() + buildPotencyTable() + buildCellSaltTable();
+  document.getElementById('resultCount').textContent = 'Reference';
+}
+function renderReference(ref) {
+  const inner = document.getElementById('contentInner');
+  if (ref === 'Abbreviations') inner.innerHTML = buildAbbrTable();
+  else if (ref === 'Potencies') inner.innerHTML = buildPotencyTable();
+  else inner.innerHTML = buildCellSaltTable();
+  document.getElementById('resultCount').textContent = ref;
+}
+function buildAbbrTable() {
+  const rows = Object.entries(DATA.abbreviations).map(([k,v]) =>
+    `<tr><td><strong>${k}</strong></td><td>${v.name}</td><td>${v.date}</td></tr>`).join('');
+  return `<div class="ref-section"><h3>Abbreviation Guide</h3>
+    <table class="ref-table"><thead><tr><th>Code</th><th>Course</th><th>Published</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+}
+function buildPotencyTable() {
+  const rows = DATA.potencies.map(p =>
+    `<tr><td><strong>${p.label}</strong></td><td>${p.description}</td></tr>`).join('');
+  return `<div class="ref-section"><h3>Potencies</h3>
+    <table class="ref-table"><thead><tr><th>Type</th><th>Description</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+}
+function buildCellSaltTable() {
+  const rows = DATA.cell_salts.map(c =>
+    `<tr><td>${c.number}</td><td><strong>${c.condition}</strong></td><td>${c.combinations}</td><td>${c.indications}</td></tr>`).join('');
+  return `<div class="ref-section"><h3>Cell Salt Combinations</h3>
+    <table class="ref-table"><thead><tr><th>#</th><th>Condition</th><th>Combinations</th><th>Indications</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+}
+
+// --- Helpers ---
+function getAbbrevTitle(code) {
+  return code.split(/[,\s]+/).map(p => {
+    const a = DATA.abbreviations[p.trim()];
+    return a ? `${p.trim()}: ${a.name}` : p.trim();
+  }).join(', ');
+}
+function hl(text, query) {
+  if (!query) return text;
+  const re = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')})`, 'gi');
+  return text.replace(re, '<span class="highlight">$1</span>');
+}
+function escAttr(s) { return s.replace(/"/g, '&quot;').replace(/</g, '&lt;'); }
+function escHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function truncate(s, n) { return s.length > n ? s.substring(0, n) + '…' : s; }
+function debounce(fn, ms) { let t; return function(...a) { clearTimeout(t); t = setTimeout(() => fn.apply(this, a), ms); }; }
+</script>
+</body>
+</html>
