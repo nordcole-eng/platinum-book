@@ -483,32 +483,12 @@ function renderSearchResults(results, query) {
   inner.innerHTML = html;
   document.getElementById('resultCount').textContent = `${results.length} result${results.length !== 1 ? 's' : ''}`;
 
-  // Wire expand/collapse
+  // Wire ALL expand/collapse and original toggles at once (including hidden rest results)
   inner.querySelectorAll('.compact-card').forEach(card => {
     card.querySelector('.compact-header').addEventListener('click', () => {
       card.classList.toggle('expanded');
     });
   });
-
-  // Wire show all
-  const showAllBtn = document.getElementById('showAllBtn');
-  if (showAllBtn) {
-    showAllBtn.addEventListener('click', () => {
-      const el = document.getElementById('restResults');
-      const showing = el.style.display !== 'none';
-      el.style.display = showing ? 'none' : 'block';
-      showAllBtn.textContent = showing ? 'Show All' : 'Hide';
-      if (!showing) {
-        el.querySelectorAll('.compact-card').forEach(card => {
-          card.querySelector('.compact-header').addEventListener('click', () => {
-            card.classList.toggle('expanded');
-          });
-        });
-      }
-    });
-  }
-
-  // Wire original toggles
   inner.querySelectorAll('.toggle-original').forEach(btn => {
     btn.addEventListener('click', e => {
       e.stopPropagation();
@@ -518,6 +498,17 @@ function renderSearchResults(results, query) {
       btn.textContent = showing ? 'Show original text' : 'Hide original text';
     });
   });
+
+  // Wire show all (just toggles visibility, handlers already attached)
+  const showAllBtn = document.getElementById('showAllBtn');
+  if (showAllBtn) {
+    showAllBtn.addEventListener('click', () => {
+      const el = document.getElementById('restResults');
+      const showing = el.style.display !== 'none';
+      el.style.display = showing ? 'none' : 'block';
+      showAllBtn.textContent = showing ? 'Show All' : 'Hide';
+    });
+  }
 }
 
 function renderCompactCard(item, query, id) {
