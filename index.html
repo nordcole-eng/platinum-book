@@ -266,6 +266,88 @@ body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); co
 
 .highlight { background: rgba(251,191,36,.3); border-radius: 2px; padding: 0 1px; }
 
+/* --- Add to Rx button on remedy entries --- */
+.remedy-entry { position: relative; padding-right: 44px; }
+.add-rx-btn {
+  position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+  background: none; border: 1px solid var(--border); color: var(--text2);
+  border-radius: 6px; width: 26px; height: 26px; font-size: 16px; line-height: 1;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: all .15s; flex-shrink: 0;
+}
+.add-rx-btn:hover { border-color: var(--green); color: var(--green); background: rgba(74,222,128,.08); }
+.add-rx-btn.added { border-color: var(--green); color: var(--green); background: rgba(74,222,128,.15); }
+
+/* --- Floating prescription button --- */
+.rx-float {
+  position: fixed; bottom: 28px; right: 28px; z-index: 100;
+  background: var(--green); color: #0f1117; border: none; border-radius: 50px;
+  padding: 12px 22px; font-size: 14px; font-weight: 700; cursor: pointer;
+  display: none; align-items: center; gap: 8px; box-shadow: 0 4px 20px rgba(74,222,128,.4);
+  transition: all .2s;
+}
+.rx-float:hover { transform: translateY(-2px); box-shadow: 0 6px 24px rgba(74,222,128,.5); }
+.rx-float.show { display: flex; }
+.rx-badge {
+  background: #0f1117; color: var(--green); border-radius: 20px;
+  padding: 1px 8px; font-size: 12px; font-weight: 800;
+}
+
+/* --- Prescription drawer --- */
+.rx-drawer {
+  position: fixed; top: 0; right: 0; width: 480px; max-width: 100vw; height: 100vh;
+  background: var(--surface); border-left: 1px solid var(--border);
+  z-index: 200; display: flex; flex-direction: column;
+  transform: translateX(100%); transition: transform .3s ease;
+  box-shadow: -4px 0 40px rgba(0,0,0,.4);
+}
+.rx-drawer.open { transform: translateX(0); }
+.rx-drawer-header {
+  padding: 20px 24px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.rx-drawer-header h2 { font-size: 18px; font-weight: 800; }
+.rx-close {
+  background: var(--surface2); border: 1px solid var(--border); color: var(--text2);
+  border-radius: 8px; width: 32px; height: 32px; font-size: 18px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; transition: all .15s;
+}
+.rx-close:hover { border-color: var(--rose); color: var(--rose); }
+.rx-body { flex: 1; overflow-y: auto; padding: 20px 24px; }
+.rx-empty { text-align: center; padding: 60px 20px; color: var(--text2); font-size: 14px; }
+.rx-item {
+  display: flex; align-items: flex-start; gap: 10px; padding: 10px 12px;
+  background: var(--surface2); border: 1px solid var(--border); border-radius: 8px;
+  margin-bottom: 8px;
+}
+.rx-item-text { flex: 1; font-size: 13px; line-height: 1.5; }
+.rx-item-condition { font-size: 10px; color: var(--text2); margin-top: 2px; }
+.rx-remove {
+  background: none; border: none; color: var(--text2); cursor: pointer;
+  font-size: 16px; padding: 0 2px; transition: color .15s; flex-shrink: 0;
+}
+.rx-remove:hover { color: var(--rose); }
+.rx-footer { padding: 16px 24px; border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: 10px; }
+.rx-preview {
+  background: var(--bg); border: 1px solid var(--border); border-radius: 8px;
+  padding: 14px; font-size: 12px; line-height: 1.7; color: var(--text2);
+  white-space: pre-wrap; max-height: 220px; overflow-y: auto; font-family: monospace;
+}
+.rx-copy-btn {
+  background: var(--accent); color: #fff; border: none; border-radius: 8px;
+  padding: 11px; font-size: 14px; font-weight: 700; cursor: pointer; transition: all .15s;
+  text-align: center;
+}
+.rx-copy-btn:hover { background: var(--accent2); }
+.rx-copy-btn.copied { background: var(--green); color: #0f1117; }
+.rx-clear { background: none; border: none; color: var(--text2); font-size: 12px; cursor: pointer; text-align: center; text-decoration: underline; }
+.rx-clear:hover { color: var(--rose); }
+.rx-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 199;
+  display: none;
+}
+.rx-overlay.show { display: block; }
+
 /* --- Reference --- */
 .ref-section { margin-bottom: 32px; }
 .ref-section h3 { font-size: 15px; font-weight: 700; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
@@ -320,15 +402,130 @@ body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); co
   </div>
 </div>
 
+<!-- Prescription drawer -->
+<div class="rx-overlay" id="rxOverlay"></div>
+<div class="rx-drawer" id="rxDrawer">
+  <div class="rx-drawer-header">
+    <h2>&#128196; Prescription</h2>
+    <button class="rx-close" id="rxClose">&times;</button>
+  </div>
+  <div class="rx-body" id="rxBody"></div>
+  <div class="rx-footer">
+    <div class="rx-preview" id="rxPreview"></div>
+    <button class="rx-copy-btn" id="rxCopyBtn">Copy to Clipboard</button>
+    <button class="rx-clear" id="rxClearBtn">Clear all</button>
+  </div>
+</div>
+
+<!-- Floating Rx button -->
+<button class="rx-float" id="rxFloat">&#128196; Prescription <span class="rx-badge" id="rxBadge">0</span></button>
+
 <script>
 let DATA = null;
 let activeLetter = null;
 let activeTab = 'conditions';
 let currentView = 'home';
 
+// --- Prescription cart ---
+let rxItems = []; // [{text, condition, raw}]
+
+function rxInit() {
+  document.getElementById('rxFloat').addEventListener('click', rxOpen);
+  document.getElementById('rxClose').addEventListener('click', rxClose);
+  document.getElementById('rxOverlay').addEventListener('click', rxClose);
+  document.getElementById('rxCopyBtn').addEventListener('click', rxCopy);
+  document.getElementById('rxClearBtn').addEventListener('click', () => { rxItems = []; rxRefresh(); rxClose(); });
+}
+
+function rxOpen() { document.getElementById('rxDrawer').classList.add('open'); document.getElementById('rxOverlay').classList.add('show'); rxRefresh(); }
+function rxClose() { document.getElementById('rxDrawer').classList.remove('open'); document.getElementById('rxOverlay').classList.remove('show'); }
+
+function rxAdd(text, condition) {
+  const key = text + '||' + condition;
+  if (rxItems.find(r => r.key === key)) return;
+  rxItems.push({ key, text, condition });
+  rxRefreshFloat();
+}
+
+function rxRemove(key) {
+  rxItems = rxItems.filter(r => r.key !== key);
+  rxRefresh();
+  rxRefreshFloat();
+}
+
+function rxRefreshFloat() {
+  const btn = document.getElementById('rxFloat');
+  const badge = document.getElementById('rxBadge');
+  badge.textContent = rxItems.length;
+  btn.classList.toggle('show', rxItems.length > 0);
+  // update add buttons' state
+  document.querySelectorAll('.add-rx-btn').forEach(b => {
+    b.classList.toggle('added', rxItems.some(r => r.key === b.dataset.key));
+    b.textContent = rxItems.some(r => r.key === b.dataset.key) ? '✓' : '+';
+  });
+}
+
+function rxRefresh() {
+  const body = document.getElementById('rxBody');
+  const preview = document.getElementById('rxPreview');
+  if (!rxItems.length) {
+    body.innerHTML = `<div class="rx-empty">No remedies selected yet.<br>Hit <strong>+</strong> on any remedy to add it here.</div>`;
+    preview.textContent = '';
+    return;
+  }
+  body.innerHTML = rxItems.map(r => `
+    <div class="rx-item">
+      <div class="rx-item-text">
+        <div>${r.text}</div>
+        <div class="rx-item-condition">For: ${r.condition}</div>
+      </div>
+      <button class="rx-remove" data-key="${escAttr(r.key)}">&times;</button>
+    </div>`).join('');
+  body.querySelectorAll('.rx-remove').forEach(btn => {
+    btn.addEventListener('click', () => rxRemove(btn.dataset.key));
+  });
+  preview.textContent = rxBuildText();
+}
+
+function rxBuildText() {
+  const date = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+  let txt = `FOURFOLD HOMEOPATHY — CLIENT PRESCRIPTION\n`;
+  txt += `${'─'.repeat(44)}\n`;
+  txt += `Date: ${date}\n\n`;
+
+  // Group by condition
+  const groups = {};
+  rxItems.forEach(r => {
+    if (!groups[r.condition]) groups[r.condition] = [];
+    groups[r.condition].push(r.text);
+  });
+  Object.entries(groups).forEach(([cond, items]) => {
+    txt += `FOR: ${cond}\n`;
+    items.forEach(item => { txt += `  • ${item}\n`; });
+    txt += '\n';
+  });
+
+  txt += `${'─'.repeat(44)}\n`;
+  txt += `Prepared by FourFold Homeopathy\n`;
+  txt += `Your trusted homeopathic reference.\n`;
+  txt += `homeopathy-database.vercel.app`;
+  return txt;
+}
+
+function rxCopy() {
+  const text = rxBuildText();
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.getElementById('rxCopyBtn');
+    btn.textContent = '✓ Copied!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'Copy to Clipboard'; btn.classList.remove('copied'); }, 2000);
+  });
+}
+
 fetch('remedies_data.json').then(r => r.json()).then(d => { DATA = d; init(); });
 
 function init() {
+  rxInit();
   buildLetterGrid();
   document.getElementById('homeBtn').addEventListener('click', goHome);
   document.getElementById('homeTopBtn').addEventListener('click', goHome);
@@ -449,17 +646,26 @@ function parseRemedy(text) {
   return { type: 'remedy', name, potency, dose, admin: admin || '' };
 }
 
-function renderParsedRemedy(parsed, query) {
+function renderParsedRemedy(parsed, query, condition) {
   if (parsed.type === 'crossref')
     return `<div class="remedy-entry crossref">${hl(parsed.text, query)}</div>`;
   if (parsed.type === 'note')
     return `<div class="remedy-entry note-line">${hl(parsed.text, query)}</div>`;
-  let html = '<div class="remedy-entry"><div class="re-row">';
+
+  // Build plain text for cart
+  const plainText = [parsed.name, parsed.potency, parsed.dose ? `(${parsed.dose})` : '', parsed.admin].filter(Boolean).join(' ');
+  const key = escAttr(plainText + '||' + (condition || ''));
+  const isAdded = rxItems.some(r => r.key === (plainText + '||' + (condition || '')));
+
+  let html = `<div class="remedy-entry"><div class="re-row">`;
   if (parsed.name) html += `<span class="re-name">${hl(parsed.name, query)}</span>`;
   if (parsed.potency) html += `<span class="re-potency">${hl(parsed.potency, query)}</span>`;
   if (parsed.dose) html += `<span class="re-dose">${parsed.dose}</span>`;
   html += '</div>';
   if (parsed.admin) html += `<div class="re-admin">${hl(parsed.admin, query)}</div>`;
+  if (condition !== undefined) {
+    html += `<button class="add-rx-btn ${isAdded ? 'added' : ''}" data-key="${key}" data-text="${escAttr(plainText)}" data-condition="${escAttr(condition || '')}">${isAdded ? '✓' : '+'}</button>`;
+  }
   html += '</div>';
   return html;
 }
@@ -534,6 +740,7 @@ function renderSearchResults(results, query) {
       btn.textContent = showing ? 'Show original text' : 'Hide original text';
     });
   });
+  wireRxButtons(inner);
 
   // Wire show all (just toggles visibility, handlers already attached)
   const showAllBtn = document.getElementById('showAllBtn');
@@ -569,7 +776,7 @@ function renderCompactCard(item, query, id) {
     </div>
     <div class="compact-body">
       <div class="compact-body-inner">
-        ${lines.map(r => renderParsedRemedy(parseRemedy(r), query)).join('')}
+        ${lines.map(r => renderParsedRemedy(parseRemedy(r), query, parsed.name)).join('')}
         <button class="toggle-original">Show original text</button>
         <div class="compact-original">${escHtml(originalText)}</div>
       </div>
@@ -596,7 +803,7 @@ function renderCards(items, query) {
         ${item.sources.length ? `<div class="card-sources">${item.sources.map(s =>
           `<span class="source-tag" title="${escAttr(getAbbrevTitle(s))}">${s}</span>`).join('')}</div>` : ''}
       </div>
-      ${lines.map(r => renderParsedRemedy(parseRemedy(r), query)).join('')}
+      ${lines.map(r => renderParsedRemedy(parseRemedy(r), query, parsed.name)).join('')}
     </div>`;
   }).join('');
   if (items.length > 50) {
@@ -606,6 +813,7 @@ function renderCards(items, query) {
       </button></div>`;
   }
   inner.innerHTML = html;
+  wireRxButtons(inner);
   if (items.length > 50) {
     document.getElementById('loadMoreBtn').addEventListener('click', () => {
       const all = items.map(item => {
@@ -622,10 +830,11 @@ function renderCards(items, query) {
             ${item.sources.length ? `<div class="card-sources">${item.sources.map(s =>
               `<span class="source-tag" title="${escAttr(getAbbrevTitle(s))}">${s}</span>`).join('')}</div>` : ''}
           </div>
-          ${lines.map(r => renderParsedRemedy(parseRemedy(r), query)).join('')}
+          ${lines.map(r => renderParsedRemedy(parseRemedy(r), query, parsed.name)).join('')}
         </div>`;
       }).join('');
       inner.innerHTML = all;
+      wireRxButtons(inner);
     });
   }
 }
@@ -899,6 +1108,24 @@ function buildCellSaltTable() {
     `<tr><td>${c.number}</td><td><strong>${c.condition}</strong></td><td>${c.combinations}</td><td>${c.indications}</td></tr>`).join('');
   return `<div class="ref-section"><h3>Cell Salt Combinations</h3>
     <table class="ref-table"><thead><tr><th>#</th><th>Condition</th><th>Combinations</th><th>Indications</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+}
+
+// --- Rx button wiring ---
+function wireRxButtons(container) {
+  container.querySelectorAll('.add-rx-btn').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      const key = btn.dataset.key;
+      const text = btn.dataset.text;
+      const condition = btn.dataset.condition;
+      if (rxItems.some(r => r.key === key)) {
+        rxItems = rxItems.filter(r => r.key !== key);
+      } else {
+        rxItems.push({ key, text, condition });
+      }
+      rxRefreshFloat();
+    });
+  });
 }
 
 // --- Helpers ---
