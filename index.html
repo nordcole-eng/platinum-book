@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Platinum Book — Homeopathic Remedy Library</title>
+<title>FourFold Homeopathy</title>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 :root {
@@ -246,7 +246,7 @@ body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); co
 <div class="app">
   <div class="sidebar">
     <div class="sidebar-header" id="homeBtn">
-      <h1>&#9883; Platinum Book</h1>
+      <h1>&#9883; FourFold Homeopathy</h1>
       <p>Homeopathic Remedy Library</p>
     </div>
     <div class="letter-grid" id="letterGrid"></div>
@@ -606,7 +606,7 @@ function renderHome() {
   document.getElementById('contentInner').innerHTML = `
     <div class="home">
       <div class="home-hero">
-        <h2>Platinum Book</h2>
+        <h2>FourFold Homeopathy</h2>
         <p>A comprehensive homeopathic remedy reference. Browse by letter, search by condition or remedy name, or explore the reference guides below.</p>
       </div>
       <div class="stats-row">
@@ -758,7 +758,7 @@ function hl(text, query) {
 }
 function escAttr(s) { return s.replace(/"/g, '&quot;').replace(/</g, '&lt;'); }
 function escHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-function truncate(s, n) { return s.length > n ? s.substring(0, n) + '…' : s; }
+function truncate(s, n) { return s.length > n ? s.substring(0, n) + 'â€¦' : s; }
 function debounce(fn, ms) { let t; return function(...a) { clearTimeout(t); t = setTimeout(() => fn.apply(this, a), ms); }; }
 </script>
 </body>
