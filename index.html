@@ -487,9 +487,34 @@ function rxRefresh() {
   preview.textContent = rxBuildText();
 }
 
+function plainEnglish(text) {
+  return text
+    // Remove [BP], [BPA], [BPH] etc tags
+    .replace(/\[BP[A-Z]*\]\s*/gi, '')
+    // Frequency shorthand → plain words
+    .replace(/\be(\d+)H\b/gi, (_, n) => `every ${n} hours`)
+    .replace(/\beH\b/gi, 'every hour')
+    .replace(/\be(\d+)D\b/gi, (_, n) => `every ${n} days`)
+    .replace(/\beoD\b/gi, 'every other day')
+    .replace(/\b1D\b/g, 'once daily')
+    .replace(/\b2D\b/g, 'twice daily')
+    .replace(/\b3D\b/g, '3 times daily')
+    .replace(/\b(\d+)D\b/g, (_, n) => `${n} times daily`)
+    .replace(/\bSOS\b/g, 'as needed')
+    .replace(/\buntil VMB\b/gi, 'until much better')
+    .replace(/\bVMB\b/gi, 'much better')
+    .replace(/\be(\d+)min\b/gi, (_, n) => `every ${n} minutes`)
+    // Separator # → +
+    .replace(/\s*#\s*/g, ' + ')
+    // Clean up extra spaces/parens left behind
+    .replace(/\(\s*\)/g, '')
+    .replace(/\s{2,}/g, ' ')
+    .trim();
+}
+
 function rxBuildText() {
   const date = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
-  let txt = `FOURFOLD HOMEOPATHY — CLIENT PRESCRIPTION\n`;
+  let txt = `FOURFOLD HOMEOPATHY\n`;
   txt += `${'─'.repeat(44)}\n`;
   txt += `Date: ${date}\n\n`;
 
@@ -497,7 +522,7 @@ function rxBuildText() {
   const groups = {};
   rxItems.forEach(r => {
     if (!groups[r.condition]) groups[r.condition] = [];
-    groups[r.condition].push(r.text);
+    groups[r.condition].push(plainEnglish(r.text));
   });
   Object.entries(groups).forEach(([cond, items]) => {
     txt += `FOR: ${cond}\n`;
@@ -505,8 +530,7 @@ function rxBuildText() {
     txt += '\n';
   });
 
-  txt += `${'─'.repeat(44)}\n`;
-  txt += `homeopathy-database.vercel.app`;
+  txt += `${'─'.repeat(44)}`;
   return txt;
 }
 
