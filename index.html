@@ -680,15 +680,38 @@ function getRemedyLines(item) {
 function scoreResult(item, ql) {
   let score = 0;
   const cond = item.condition.toLowerCase();
+  const allRemedyText = item.remedies.join(' ');
+
+  // --- Condition name match (most important) ---
   if (cond === ql) score += 100;
-  else if (cond.startsWith(ql)) score += 80;
+  else if (cond.startsWith(ql + ' ') || cond.startsWith(ql + ',')) score += 85;
   else if (cond.includes(ql)) score += 60;
-  const remedyMatch = item.remedies.some(r => r.toLowerCase().includes(ql));
-  if (remedyMatch && score === 0) score += 20;
-  else if (remedyMatch) score += 10;
-  if (item.remedies.length > 3) score += 5;
+  else if (item.remedies.some(r => r.toLowerCase().includes(ql))) score += 20;
+
+  // --- Generality: shorter condition names = more general ---
   const condWords = cond.split(/[\s,\-()]+/).filter(Boolean);
-  if (condWords.length <= 4) score += 3;
+  if (condWords.length === 1) score += 20;
+  else if (condWords.length === 2) score += 12;
+  else if (condWords.length <= 4) score += 5;
+  // penalize very long/specific condition names
+  if (condWords.length > 8) score -= 15;
+
+  // --- Has dose info (e.g. 30c, 6x, 200c) = actionable ---
+  const hasDose = /\b\d+[cxCX]\b/.test(allRemedyText);
+  if (hasDose) score += 18;
+
+  // --- Has frequency info (e.g. 2D, eH, SOS) = more complete ---
+  const hasFreq = /\b(e?\d+[HD]|eH|eoD|SOS|e\d+H)\b/.test(allRemedyText);
+  if (hasFreq) score += 8;
+
+  // --- More remedy options = richer entry ---
+  if (item.remedies.length >= 3) score += 6;
+  else if (item.remedies.length >= 2) score += 3;
+
+  // --- Penalize "see X" cross-reference only entries ---
+  const isOnlyCrossRef = item.remedies.every(r => /^see\s/i.test(r.trim()));
+  if (isOnlyCrossRef) score -= 30;
+
   return score;
 }
 
@@ -700,16 +723,16 @@ function renderSearchResults(results, query) {
   const scored = results.map(r => ({ item: r, score: scoreResult(r, ql) }));
   scored.sort((a, b) => b.score - a.score);
 
-  const top = scored.slice(0, 10);
-  const rest = scored.slice(10);
+  const top = scored.slice(0, 5);
+  const rest = scored.slice(5);
 
   let html = '';
   if (top.length) {
-    html += `<div class="search-section-label">Top ${Math.min(10, scored.length)} Matches</div>`;
+    html += `<div class="search-section-label">&#11088; Most Common (${top.length} recommended)</div>`;
     html += top.map((s, i) => renderCompactCard(s.item, query, `top-${i}`)).join('');
   }
   if (rest.length) {
-    html += `<div class="search-section-label">All Results (${rest.length} more)
+    html += `<div class="search-section-label">More Specific Results (${rest.length})
       <button class="show-all-btn" id="showAllBtn">Show All</button></div>`;
     html += `<div id="restResults" style="display:none;">`;
     html += rest.slice(0, 100).map((s, i) => renderCompactCard(s.item, query, `rest-${i}`)).join('');
@@ -1008,8 +1031,8 @@ function runMultiSearch() {
     scored.sort((a, b) => b.score - a.score);
     totalCount += results.length;
 
-    const top = scored.slice(0, 10);
-    const rest = scored.slice(10);
+    const top = scored.slice(0, 5);
+    const rest = scored.slice(5);
 
     allHtml += `<div class="symptom-group" data-term="${escAttr(term.text)}">`;
     allHtml += `<div class="symptom-group-label">
@@ -1023,7 +1046,7 @@ function runMultiSearch() {
       allHtml += top.map((s, i) => renderCompactCard(s.item, term.text, `${ql}-top-${i}`)).join('');
       if (rest.length) {
         allHtml += `<div class="search-section-label" style="margin-top:8px">
-          ${rest.length} more results
+          More Specific Results (${rest.length})
           <button class="show-all-btn" data-target="rest-${ql}">Show All</button>
         </div>`;
         allHtml += `<div id="rest-${CSS.escape(ql)}" style="display:none">`;
