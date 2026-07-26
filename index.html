@@ -164,13 +164,31 @@ body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); co
   background: var(--accent); opacity: .5; margin: 18px auto 0;
 }
 
-.stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 36px; }
-.stat-card {
-  background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
-  padding: 16px; text-align: center; box-shadow: var(--shadow);
+/* --- Courses --- */
+.course-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 10px;
 }
-.stat-num { font-family: var(--serif); font-size: 30px; font-weight: 600; color: var(--accent2); }
-.stat-label { font-size: 11px; color: var(--text2); text-transform: uppercase; letter-spacing: .5px; margin-top: 4px; }
+.course-card {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+  padding: 14px; cursor: pointer; box-shadow: var(--shadow);
+  transition: border-color .15s, transform .15s;
+}
+.course-card:hover { border-color: var(--accent); transform: translateY(-1px); }
+.course-card-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.course-code {
+  background: var(--accent); color: var(--on-accent); border-radius: 5px;
+  padding: 2px 8px; font-size: 11px; font-weight: 700; letter-spacing: .3px;
+}
+.course-year { font-size: 11px; color: var(--text2); }
+.course-name { font-family: var(--serif); font-size: 16px; font-weight: 600; line-height: 1.3; }
+.course-count { font-size: 11px; color: var(--text2); margin-top: 4px; }
+
+.course-heading {
+  display: flex; align-items: center; gap: 12px; margin-bottom: 16px;
+  padding-bottom: 12px; border-bottom: 2px solid var(--accent);
+}
+.course-heading-name { font-family: var(--serif); font-size: 22px; font-weight: 600; }
+.course-heading-sub { font-size: 12px; color: var(--text2); margin-top: 2px; }
 
 .home-section { margin-bottom: 28px; }
 .home-section h3 { font-size: 14px; font-weight: 700; color: var(--text2); text-transform: uppercase; letter-spacing: .5px; margin-bottom: 12px; }
@@ -434,8 +452,10 @@ body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); co
   .app { flex-direction: column; }
   .main { padding-bottom: 62px; } /* space for bottom nav */
 
-  .stats-row { grid-template-columns: repeat(2, 1fr); gap: 8px; }
-  .stat-num { font-size: 22px; }
+  .course-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  .course-card { padding: 11px; }
+  .course-name { font-size: 14px; }
+  .course-heading-name { font-size: 18px; }
 
   .home-btn { display: flex !important; }
   .search-bar { padding: 10px 12px; gap: 8px; border-bottom: none; }
@@ -678,6 +698,7 @@ fetch('remedies_data.json').then(r => r.json()).then(d => { DATA = d; init(); })
 
 function init() {
   rxInit();
+  buildCourses();
   buildLetterGrid();
   document.getElementById('homeBtn').addEventListener('click', goHome);
   document.getElementById('homeTopBtn').addEventListener('click', goHome);
@@ -761,6 +782,50 @@ function selectLetter(letter) {
   document.querySelectorAll('.nav-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === 'conditions'));
   setHomeBtn(true);
   showConditionsForLetter(letter);
+}
+
+function selectCourse(code) {
+  const course = COURSES.find(c => c.code === code);
+  if (!course) return;
+  activeLetter = null;
+  activeTerms = [];
+  currentView = 'course';
+  document.getElementById('searchInput').value = '';
+  document.getElementById('searchClear').classList.remove('show');
+  document.getElementById('chipsBar').innerHTML = '';
+  document.querySelectorAll('.letter-btn').forEach(b => b.classList.remove('active'));
+  activeTab = 'conditions';
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === 'conditions'));
+  setHomeBtn(true);
+  closeMobileLetterDrawer();
+
+  const items = remediesForCourse(code);
+  const list = document.getElementById('sidebarList');
+  list.innerHTML = items.map((item, i) => {
+    const p = parseConditionName(item.condition);
+    return `<div class="sidebar-item" data-idx="${i}"><span>${escHtml(truncate(p.name, 32))}</span><span class="tag">${item.remedies.length}</span></div>`;
+  }).join('');
+  list.querySelectorAll('.sidebar-item').forEach(el => {
+    el.addEventListener('click', () => {
+      list.querySelectorAll('.sidebar-item').forEach(e => e.classList.remove('active'));
+      el.classList.add('active');
+      renderCards([items[+el.dataset.idx]], '', courseHeading(course));
+      document.getElementById('content').scrollTop = 0;
+    });
+  });
+
+  renderCards(items, '', courseHeading(course));
+  document.getElementById('content').scrollTop = 0;
+}
+
+function courseHeading(course) {
+  return `<div class="course-heading">
+    <span class="course-code">${course.code}</span>
+    <div>
+      <div class="course-heading-name">${escHtml(course.name)}</div>
+      <div class="course-heading-sub">${course.count.toLocaleString()} conditions${course.date ? ` &middot; published ${course.date}` : ''}</div>
+    </div>
+  </div>`;
 }
 
 function switchTab(tab) {
@@ -854,6 +919,39 @@ function getRemedyLines(item) {
     for (const sl of r.split('\n').filter(s => s.trim())) lines.push(sl);
   }
   return lines;
+}
+
+// --- Courses (the source books/courses each entry came from) ---
+// A few courses are recorded under more than one code in the data.
+const COURSE_ALIASES = { F: ['FEM'], G2: ['GW2'] };
+let COURSES = [];
+
+// Source strings are comma-joined and sometimes spaced ("BP A" for BPA),
+// so match the code's characters allowing whitespace between them.
+function courseRegex(code) {
+  const chars = code.split('').map(c => c.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+  return new RegExp('\\b' + chars.join('\\s*') + '\\b', 'i');
+}
+
+function entryInCourse(item, res) {
+  return item.sources.some(s => res.some(re => re.test(s)));
+}
+
+// Courses are the abbreviations that actually appear as a source on some entry;
+// the dosing notation in the same table (eod, PRN, "+") never does.
+function buildCourses() {
+  COURSES = [];
+  for (const [code, meta] of Object.entries(DATA.abbreviations)) {
+    if (!/^[A-Za-z0-9]+$/.test(code)) continue;
+    const res = [code].concat(COURSE_ALIASES[code] || []).map(courseRegex);
+    const count = DATA.remedies.reduce((n, r) => n + (entryInCourse(r, res) ? 1 : 0), 0);
+    if (count) COURSES.push({ code, name: meta.name, date: meta.date, count, res });
+  }
+}
+
+function remediesForCourse(code) {
+  const c = COURSES.find(x => x.code === code);
+  return c ? DATA.remedies.filter(r => entryInCourse(r, c.res)) : [];
 }
 
 // --- Banerji Protocols (BPH / BPA / BPO sources, or [BP] marked lines) ---
@@ -1020,28 +1118,31 @@ function renderCompactCard(item, query, id) {
   </div>`;
 }
 
-// --- Full Cards (letter browse) ---
-function renderCards(items, query) {
+// --- Full Cards (letter / course browse) ---
+function buildCard(item, query) {
+  const parsed = parseConditionName(item.condition);
+  const lines = getRemedyLines(item);
+  return `
+  <div class="card">
+    <div class="card-header">
+      <span class="card-letter">${item.letter}</span>
+      <div>
+        <div class="card-condition">${hl(parsed.name, query)}</div>
+        ${parsed.desc ? `<div class="card-desc">${hl(parsed.desc, query)}</div>` : ''}
+      </div>
+      ${item.sources.length ? `<div class="card-sources">${item.sources.map(s =>
+        `<span class="source-tag" title="${escAttr(getAbbrevTitle(s))}">${s}</span>`).join('')}</div>` : ''}
+    </div>
+    ${lines.map(r => renderParsedRemedy(parseRemedy(r), query, parsed.name)).join('')}
+  </div>`;
+}
+
+function renderCards(items, query, heading) {
   const inner = document.getElementById('contentInner');
   document.getElementById('resultCount').textContent = `${items.length} condition${items.length !== 1 ? 's' : ''}`;
-  const show = items.slice(0, 50);
-  let html = show.map(item => {
-    const parsed = parseConditionName(item.condition);
-    const lines = getRemedyLines(item);
-    return `
-    <div class="card">
-      <div class="card-header">
-        <span class="card-letter">${item.letter}</span>
-        <div>
-          <div class="card-condition">${hl(parsed.name, query)}</div>
-          ${parsed.desc ? `<div class="card-desc">${hl(parsed.desc, query)}</div>` : ''}
-        </div>
-        ${item.sources.length ? `<div class="card-sources">${item.sources.map(s =>
-          `<span class="source-tag" title="${escAttr(getAbbrevTitle(s))}">${s}</span>`).join('')}</div>` : ''}
-      </div>
-      ${lines.map(r => renderParsedRemedy(parseRemedy(r), query, parsed.name)).join('')}
-    </div>`;
-  }).join('');
+  const head = heading || '';
+
+  let html = head + items.slice(0, 50).map(item => buildCard(item, query)).join('');
   if (items.length > 50) {
     html += `<div style="text-align:center;padding:20px;">
       <button id="loadMoreBtn" style="background:var(--accent);color:var(--on-accent);border:none;border-radius:8px;padding:10px 28px;cursor:pointer;font-size:14px;font-weight:600;">
@@ -1052,24 +1153,7 @@ function renderCards(items, query) {
   wireRxButtons(inner);
   if (items.length > 50) {
     document.getElementById('loadMoreBtn').addEventListener('click', () => {
-      const all = items.map(item => {
-        const parsed = parseConditionName(item.condition);
-        const lines = getRemedyLines(item);
-        return `
-        <div class="card">
-          <div class="card-header">
-            <span class="card-letter">${item.letter}</span>
-            <div>
-              <div class="card-condition">${hl(parsed.name, query)}</div>
-              ${parsed.desc ? `<div class="card-desc">${hl(parsed.desc, query)}</div>` : ''}
-            </div>
-            ${item.sources.length ? `<div class="card-sources">${item.sources.map(s =>
-              `<span class="source-tag" title="${escAttr(getAbbrevTitle(s))}">${s}</span>`).join('')}</div>` : ''}
-          </div>
-          ${lines.map(r => renderParsedRemedy(parseRemedy(r), query, parsed.name)).join('')}
-        </div>`;
-      }).join('');
-      inner.innerHTML = all;
+      inner.innerHTML = head + items.map(item => buildCard(item, query)).join('');
       wireRxButtons(inner);
     });
   }
@@ -1097,7 +1181,6 @@ function showConditionsForLetter(letter) {
 function renderHome() {
   const letterCounts = {};
   DATA.remedies.forEach(r => { letterCounts[r.letter] = (letterCounts[r.letter] || 0) + 1; });
-  const totalRemedyLines = DATA.remedies.reduce((s, r) => s + r.remedies.length, 0);
   const letters = Object.keys(letterCounts).sort();
 
   document.getElementById('contentInner').innerHTML = `
@@ -1106,11 +1189,19 @@ function renderHome() {
         <h2>FourFold Homeopathy</h2>
         <p>A comprehensive homeopathic remedy reference. Browse by letter, search by condition or remedy name, or explore the reference guides below.</p>
       </div>
-      <div class="stats-row">
-        <div class="stat-card"><div class="stat-num">${DATA.remedies.length.toLocaleString()}</div><div class="stat-label">Conditions</div></div>
-        <div class="stat-card"><div class="stat-num">${totalRemedyLines.toLocaleString()}</div><div class="stat-label">Remedy Lines</div></div>
-        <div class="stat-card"><div class="stat-num">${letters.length}</div><div class="stat-label">Letter Sections</div></div>
-        <div class="stat-card"><div class="stat-num">${DATA.cell_salts.length}</div><div class="stat-label">Cell Salt Combos</div></div>
+      <div class="home-section">
+        <h3>Browse by Course</h3>
+        <div class="course-grid">
+          ${COURSES.map(c => `
+            <div class="course-card" data-course="${escAttr(c.code)}">
+              <div class="course-card-top">
+                <span class="course-code">${c.code}</span>
+                ${c.date ? `<span class="course-year">${c.date}</span>` : ''}
+              </div>
+              <div class="course-name">${escHtml(c.name)}</div>
+              <div class="course-count">${c.count.toLocaleString()} conditions</div>
+            </div>`).join('')}
+        </div>
       </div>
       <div class="home-section">
         <h3>Browse by Letter</h3>
@@ -1135,6 +1226,9 @@ function renderHome() {
       </div>
     </div>`;
 
+  document.querySelectorAll('.course-card').forEach(el => {
+    el.addEventListener('click', () => selectCourse(el.dataset.course));
+  });
   document.querySelectorAll('.quick-letter').forEach(el => {
     el.addEventListener('click', () => selectLetter(el.dataset.letter));
   });
