@@ -7,10 +7,24 @@
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 :root {
-  --bg: #0f1117; --surface: #1a1d27; --surface2: #242836;
-  --border: #2e3348; --text: #e4e6ef; --text2: #9298b0;
-  --accent: #7c6cf0; --accent2: #9d8df7; --accent-bg: rgba(124,108,240,.08);
-  --green: #4ade80; --amber: #fbbf24; --teal: #2dd4bf; --rose: #fb7185;
+  /* Palette sampled from the cover of "The Fourfold Path to Healing" (Cowan):
+     parchment ground, forest-green band, violet spine, painterly earth tones. */
+  --bg: #f3ece0; --surface: #fbf7ef; --surface2: #ece3d4;
+  --border: #ddd0b9; --text: #2c2722; --text2: #6d6357;
+  --accent: #3f6b50; --accent2: #2c4f3a; --accent-bg: rgba(63,107,80,.08);
+  --green: #4a7c59; --amber: #9a6714; --teal: #4a6f8a; --rose: #a8443f;
+  --plum: #6f5a91;
+  --on-accent: #fdfaf4;
+  --green-bg: rgba(74,124,89,.10); --green-bg2: rgba(74,124,89,.18);
+  --amber-bg: rgba(154,103,20,.08); --teal-bg: rgba(74,111,138,.12);
+  --teal-bg-soft: rgba(74,111,138,.07);
+  --hl-bg: rgba(214,168,60,.42);
+  --shadow: 0 1px 2px rgba(74,58,32,.06);
+  --shadow-lg: -4px 0 40px rgba(74,58,32,.22);
+  --shadow-green: 0 4px 20px rgba(63,107,80,.32);
+  --shadow-green-hover: 0 6px 24px rgba(63,107,80,.42);
+  --overlay: rgba(52,42,28,.42);
+  --serif: 'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, 'Times New Roman', serif;
 }
 body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
 
@@ -21,13 +35,17 @@ body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); co
   width: 280px; min-width: 280px; background: var(--surface);
   border-right: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden;
 }
+/* Green band across the top, echoing the cover */
 .sidebar-header {
-  padding: 16px 20px; border-bottom: 1px solid var(--border); cursor: pointer;
-  transition: background .15s;
+  padding: 18px 20px; border-bottom: 1px solid var(--border); cursor: pointer;
+  background: var(--accent); color: var(--on-accent); transition: background .15s;
 }
-.sidebar-header:hover { background: var(--surface2); }
-.sidebar-header h1 { font-size: 17px; font-weight: 700; margin-bottom: 2px; }
-.sidebar-header p { font-size: 11px; color: var(--text2); }
+.sidebar-header:hover { background: var(--accent2); }
+.sidebar-header h1 {
+  font-family: var(--serif); font-size: 19px; font-weight: 600;
+  letter-spacing: .2px; margin-bottom: 3px;
+}
+.sidebar-header p { font-size: 11px; color: rgba(253,250,244,.75); font-style: italic; }
 
 .letter-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; padding: 10px 14px; }
 .letter-btn {
@@ -35,8 +53,8 @@ body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); co
   border-radius: 6px; padding: 5px 0; text-align: center; cursor: pointer;
   font-size: 12px; font-weight: 600; transition: all .15s;
 }
-.letter-btn:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
-.letter-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+.letter-btn:hover { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
+.letter-btn.active { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
 .letter-btn.empty { opacity: .3; pointer-events: none; }
 
 .nav-tabs { display: flex; border-bottom: 1px solid var(--border); padding: 0 14px; }
@@ -95,7 +113,7 @@ body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); co
   display: flex; align-items: center; gap: 6px;
   padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 600;
   cursor: pointer; border: 1px solid var(--border); transition: all .15s;
-  background: var(--accent); color: #fff; border-color: var(--accent);
+  background: var(--accent); color: var(--on-accent); border-color: var(--accent);
 }
 .chip.off {
   background: var(--surface2); color: var(--text2); border-color: var(--border);
@@ -111,8 +129,13 @@ body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); co
   padding-bottom: 8px; border-bottom: 2px solid var(--accent);
 }
 .symptom-chip-inline {
-  background: var(--accent); color: #fff; border-radius: 20px;
+  background: var(--accent); color: var(--on-accent); border-radius: 20px;
   padding: 4px 14px; font-size: 13px; font-weight: 700;
+}
+/* Term still being typed — outlined until committed with Enter */
+.symptom-chip-inline.draft {
+  background: transparent; color: var(--accent2);
+  border: 1px dashed var(--accent); padding: 3px 13px;
 }
 
 .home-btn {
@@ -130,15 +153,23 @@ body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); co
 /* --- Home Page --- */
 .home { padding: 40px 0; }
 .home-hero { text-align: center; margin-bottom: 40px; }
-.home-hero h2 { font-size: 32px; font-weight: 800; margin-bottom: 8px; }
-.home-hero p { color: var(--text2); font-size: 15px; max-width: 520px; margin: 0 auto; }
+.home-hero h2 {
+  font-family: var(--serif); font-size: 34px; font-weight: 600;
+  letter-spacing: .2px; margin-bottom: 10px; color: var(--accent2);
+}
+.home-hero p { color: var(--text2); font-size: 15px; max-width: 520px; margin: 0 auto; line-height: 1.6; }
+/* Rule under the hero, as on a title page */
+.home-hero::after {
+  content: ''; display: block; width: 64px; height: 2px;
+  background: var(--accent); opacity: .5; margin: 18px auto 0;
+}
 
 .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 36px; }
 .stat-card {
   background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
-  padding: 16px; text-align: center;
+  padding: 16px; text-align: center; box-shadow: var(--shadow);
 }
-.stat-num { font-size: 28px; font-weight: 800; color: var(--accent2); }
+.stat-num { font-family: var(--serif); font-size: 30px; font-weight: 600; color: var(--accent2); }
 .stat-label { font-size: 11px; color: var(--text2); text-transform: uppercase; letter-spacing: .5px; margin-top: 4px; }
 
 .home-section { margin-bottom: 28px; }
@@ -175,7 +206,7 @@ body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); co
 .compact-card {
   background: var(--surface); border: 1px solid var(--border);
   border-radius: 10px; margin-bottom: 6px; transition: border-color .15s; cursor: pointer;
-  overflow: hidden;
+  overflow: hidden; box-shadow: var(--shadow);
 }
 .compact-card:hover { border-color: var(--accent); }
 .compact-card.expanded { border-color: var(--accent); }
@@ -183,11 +214,11 @@ body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); co
   display: flex; align-items: center; gap: 10px; padding: 12px 16px;
 }
 .compact-letter {
-  background: var(--accent); color: #fff; width: 24px; height: 24px;
+  background: var(--accent); color: var(--on-accent); width: 24px; height: 24px;
   border-radius: 5px; display: flex; align-items: center; justify-content: center;
   font-size: 11px; font-weight: 700; flex-shrink: 0;
 }
-.compact-name { font-size: 14px; font-weight: 600; flex: 1; }
+.compact-name { font-family: var(--serif); font-size: 15px; font-weight: 600; flex: 1; }
 .compact-desc { font-size: 12px; color: var(--text2); margin-top: 2px; font-weight: 400; }
 .compact-meta { display: flex; gap: 6px; align-items: center; flex-shrink: 0; }
 .compact-count {
@@ -222,23 +253,28 @@ body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); co
 .card {
   background: var(--surface); border: 1px solid var(--border);
   border-radius: 12px; padding: 20px; margin-bottom: 14px;
-  transition: border-color .15s;
+  transition: border-color .15s; box-shadow: var(--shadow);
 }
 .card:hover { border-color: var(--accent); }
 .card-header {
   display: flex; align-items: center; gap: 10px; margin-bottom: 14px;
 }
 .card-letter {
-  background: var(--accent); color: #fff; width: 28px; height: 28px;
+  background: var(--accent); color: var(--on-accent); width: 28px; height: 28px;
   border-radius: 6px; display: flex; align-items: center; justify-content: center;
   font-size: 13px; font-weight: 700; flex-shrink: 0;
 }
-.card-condition { font-size: 16px; font-weight: 700; }
+.card-condition { font-family: var(--serif); font-size: 18px; font-weight: 600; }
 .card-desc { font-size: 13px; color: var(--text2); margin-top: 2px; font-weight: 400; }
 .card-sources { display: flex; gap: 5px; flex-wrap: wrap; margin-left: auto; }
 .source-tag {
   background: var(--surface2); border: 1px solid var(--border);
   border-radius: 4px; padding: 2px 7px; font-size: 10px; color: var(--text2); cursor: help;
+}
+.bp-tag {
+  background: rgba(111,90,145,.12); border: 1px solid var(--plum);
+  border-radius: 4px; padding: 2px 7px; font-size: 10px; font-weight: 700;
+  color: var(--plum); cursor: help; flex-shrink: 0;
 }
 
 .remedy-entry {
@@ -248,23 +284,23 @@ body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); co
 }
 .remedy-entry:last-child { margin-bottom: 0; }
 .remedy-entry.crossref {
-  border-left-color: var(--amber); background: rgba(251,191,36,.06);
+  border-left-color: var(--amber); background: var(--amber-bg);
   font-style: italic; color: var(--text2);
 }
 .remedy-entry.note-line {
-  border-left-color: var(--teal); background: rgba(45,212,191,.06);
+  border-left-color: var(--teal); background: var(--teal-bg-soft);
 }
 
 .re-row { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: baseline; }
 .re-name { font-weight: 600; color: var(--text); }
 .re-potency { color: var(--amber); font-weight: 600; font-size: 12px; }
 .re-dose {
-  background: rgba(45,212,191,.12); color: var(--teal); border-radius: 4px;
+  background: var(--teal-bg); color: var(--teal); border-radius: 4px;
   padding: 1px 7px; font-size: 11px; font-weight: 600;
 }
 .re-admin { color: var(--text2); font-size: 12px; margin-top: 3px; flex-basis: 100%; }
 
-.highlight { background: rgba(251,191,36,.3); border-radius: 2px; padding: 0 1px; }
+.highlight { background: var(--hl-bg); border-radius: 2px; padding: 0 1px; }
 
 /* --- Add to Rx button on remedy entries --- */
 .remedy-entry { position: relative; padding-right: 44px; }
@@ -275,21 +311,21 @@ body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); co
   cursor: pointer; display: flex; align-items: center; justify-content: center;
   transition: all .15s; flex-shrink: 0;
 }
-.add-rx-btn:hover { border-color: var(--green); color: var(--green); background: rgba(74,222,128,.08); }
-.add-rx-btn.added { border-color: var(--green); color: var(--green); background: rgba(74,222,128,.15); }
+.add-rx-btn:hover { border-color: var(--green); color: var(--green); background: var(--green-bg); }
+.add-rx-btn.added { border-color: var(--green); color: var(--green); background: var(--green-bg2); }
 
 /* --- Floating prescription button --- */
 .rx-float {
   position: fixed; bottom: 28px; right: 28px; z-index: 100;
-  background: var(--green); color: #0f1117; border: none; border-radius: 50px;
+  background: var(--green); color: var(--on-accent); border: none; border-radius: 50px;
   padding: 12px 22px; font-size: 14px; font-weight: 700; cursor: pointer;
-  display: none; align-items: center; gap: 8px; box-shadow: 0 4px 20px rgba(74,222,128,.4);
+  display: none; align-items: center; gap: 8px; box-shadow: var(--shadow-green);
   transition: all .2s;
 }
-.rx-float:hover { transform: translateY(-2px); box-shadow: 0 6px 24px rgba(74,222,128,.5); }
+.rx-float:hover { transform: translateY(-2px); box-shadow: var(--shadow-green-hover); }
 .rx-float.show { display: flex; }
 .rx-badge {
-  background: #0f1117; color: var(--green); border-radius: 20px;
+  background: rgba(253,250,244,.22); color: var(--on-accent); border-radius: 20px;
   padding: 1px 8px; font-size: 12px; font-weight: 800;
 }
 
@@ -299,14 +335,14 @@ body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); co
   background: var(--surface); border-left: 1px solid var(--border);
   z-index: 200; display: flex; flex-direction: column;
   transform: translateX(100%); transition: transform .3s ease;
-  box-shadow: -4px 0 40px rgba(0,0,0,.4);
+  box-shadow: var(--shadow-lg);
 }
 .rx-drawer.open { transform: translateX(0); }
 .rx-drawer-header {
   padding: 20px 24px; border-bottom: 1px solid var(--border);
   display: flex; align-items: center; justify-content: space-between;
 }
-.rx-drawer-header h2 { font-size: 18px; font-weight: 800; }
+.rx-drawer-header h2 { font-family: var(--serif); font-size: 20px; font-weight: 600; }
 .rx-close {
   background: var(--surface2); border: 1px solid var(--border); color: var(--text2);
   border-radius: 8px; width: 32px; height: 32px; font-size: 18px; cursor: pointer;
@@ -334,23 +370,23 @@ body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); co
   white-space: pre-wrap; max-height: 220px; overflow-y: auto; font-family: monospace;
 }
 .rx-copy-btn {
-  background: var(--accent); color: #fff; border: none; border-radius: 8px;
+  background: var(--accent); color: var(--on-accent); border: none; border-radius: 8px;
   padding: 11px; font-size: 14px; font-weight: 700; cursor: pointer; transition: all .15s;
   text-align: center;
 }
 .rx-copy-btn:hover { background: var(--accent2); }
-.rx-copy-btn.copied { background: var(--green); color: #0f1117; }
+.rx-copy-btn.copied { background: var(--green); color: var(--on-accent); }
 .rx-clear { background: none; border: none; color: var(--text2); font-size: 12px; cursor: pointer; text-align: center; text-decoration: underline; }
 .rx-clear:hover { color: var(--rose); }
 .rx-overlay {
-  position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 199;
+  position: fixed; inset: 0; background: var(--overlay); z-index: 199;
   display: none;
 }
 .rx-overlay.show { display: block; }
 
 /* --- Reference --- */
 .ref-section { margin-bottom: 32px; }
-.ref-section h3 { font-size: 15px; font-weight: 700; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+.ref-section h3 { font-family: var(--serif); font-size: 17px; font-weight: 600; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
 .ref-table { width: 100%; border-collapse: collapse; }
 .ref-table th, .ref-table td { text-align: left; padding: 9px 12px; font-size: 13px; border-bottom: 1px solid var(--border); }
 .ref-table th { color: var(--text2); font-weight: 600; font-size: 10px; text-transform: uppercase; letter-spacing: .5px; }
@@ -373,7 +409,7 @@ body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); co
 .bottom-nav-btn.active, .bottom-nav-btn:hover { color: var(--accent2); }
 .bottom-nav-btn.rx-nav { color: var(--green); }
 .bottom-nav-badge {
-  background: var(--green); color: #0f1117; border-radius: 10px;
+  background: var(--green); color: var(--on-accent); border-radius: 10px;
   padding: 1px 6px; font-size: 9px; font-weight: 800; margin-left: 2px;
 }
 
@@ -448,7 +484,7 @@ body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); co
 <div class="app">
   <div class="sidebar">
     <div class="sidebar-header" id="homeBtn">
-      <h1>&#9883; FourFold Homeopathy</h1>
+      <h1>&#10070; FourFold Homeopathy</h1>
       <p>Homeopathic Remedy Library</p>
     </div>
     <div class="letter-grid" id="letterGrid"></div>
@@ -647,7 +683,7 @@ function init() {
   document.getElementById('homeTopBtn').addEventListener('click', goHome);
   document.querySelectorAll('.nav-tab').forEach(t => t.addEventListener('click', () => switchTab(t.dataset.tab)));
   const input = document.getElementById('searchInput');
-  input.addEventListener('input', debounce(onSearch, 300));
+  input.addEventListener('input', debounce(onSearch, 140));
   input.addEventListener('keydown', e => {
     if (e.key === 'Enter') { onSearchEnter(e); }
     if (e.key === 'Escape') { input.value = ''; activeTerms = []; goHome(); }
@@ -660,18 +696,23 @@ function setHomeBtn(visible) {
   document.getElementById('homeTopBtn').classList.toggle('show', visible);
 }
 
-function goHome() {
+// Show the home view without touching what the user has typed.
+function showHomeContent() {
   currentView = 'home';
   activeLetter = null;
   document.querySelectorAll('.letter-btn').forEach(b => b.classList.remove('active'));
-  document.getElementById('searchInput').value = '';
-  document.getElementById('searchClear').classList.remove('show');
   document.getElementById('resultCount').textContent = '';
   document.getElementById('sidebarList').innerHTML = '';
-  activeTerms = [];
   document.getElementById('chipsBar').innerHTML = '';
   setHomeBtn(false);
   renderHome();
+}
+
+function goHome() {
+  document.getElementById('searchInput').value = '';
+  document.getElementById('searchClear').classList.remove('show');
+  activeTerms = [];
+  showHomeContent();
 }
 
 function buildLetterGrid() {
@@ -815,6 +856,13 @@ function getRemedyLines(item) {
   return lines;
 }
 
+// --- Banerji Protocols (BPH / BPA / BPO sources, or [BP] marked lines) ---
+const BANERJI_SRC_RE = /\bBP\s*[HAO]?\b/i;
+function isBanerji(item) {
+  return item.sources.some(s => BANERJI_SRC_RE.test(s)) ||
+         item.remedies.some(r => r.includes('[BP]'));
+}
+
 // --- Search Relevance Scoring ---
 function scoreResult(item, ql) {
   let score = 0;
@@ -847,11 +895,62 @@ function scoreResult(item, ql) {
   if (item.remedies.length >= 3) score += 6;
   else if (item.remedies.length >= 2) score += 3;
 
+  // --- Banerji Protocols outrank equally-relevant entries ---
+  if (isBanerji(item)) score += 50;
+
   // --- Penalize "see X" cross-reference only entries ---
   const isOnlyCrossRef = item.remedies.every(r => /^see\s/i.test(r.trim()));
   if (isOnlyCrossRef) score -= 30;
 
   return score;
+}
+
+// Matching entries for a lowercased query.
+function findMatches(ql) {
+  return DATA.remedies.filter(r =>
+    r.condition.toLowerCase().includes(ql) ||
+    r.remedies.some(rem => rem.toLowerCase().includes(ql))
+  );
+}
+
+// Wire expand/collapse, original-text toggles and Rx buttons within a subtree.
+function wireCards(root) {
+  root.querySelectorAll('.compact-card').forEach(card => {
+    card.querySelector('.compact-header').addEventListener('click', () => {
+      card.classList.toggle('expanded');
+    });
+  });
+  root.querySelectorAll('.toggle-original').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      const orig = btn.nextElementSibling;
+      const showing = orig.classList.contains('show');
+      orig.classList.toggle('show');
+      btn.textContent = showing ? 'Show original text' : 'Hide original text';
+    });
+  });
+  wireRxButtons(root);
+}
+
+// "Show All" builds its cards on first click rather than up front, so typing
+// only ever renders the 5 visible cards.
+function wireLazyShowAll(btn, container, scoredRest, query, idPrefix, limit) {
+  btn.addEventListener('click', () => {
+    if (!container.dataset.filled) {
+      let html = scoredRest.slice(0, limit)
+        .map((s, i) => renderCompactCard(s.item, query, `${idPrefix}-${i}`)).join('');
+      if (scoredRest.length > limit) {
+        html += `<div style="text-align:center;padding:16px;color:var(--text2);font-size:13px;">
+          + ${scoredRest.length - limit} more results. Refine your search for better matches.</div>`;
+      }
+      container.innerHTML = html;
+      container.dataset.filled = '1';
+      wireCards(container);
+    }
+    const showing = container.style.display !== 'none';
+    container.style.display = showing ? 'none' : 'block';
+    btn.textContent = showing ? 'Show All' : 'Hide';
+  });
 }
 
 // --- Search Results (Compact) ---
@@ -873,44 +972,17 @@ function renderSearchResults(results, query) {
   if (rest.length) {
     html += `<div class="search-section-label">More Specific Results (${rest.length})
       <button class="show-all-btn" id="showAllBtn">Show All</button></div>`;
-    html += `<div id="restResults" style="display:none;">`;
-    html += rest.slice(0, 100).map((s, i) => renderCompactCard(s.item, query, `rest-${i}`)).join('');
-    if (rest.length > 100) {
-      html += `<div style="text-align:center;padding:16px;color:var(--text2);font-size:13px;">
-        + ${rest.length - 100} more results. Refine your search for better matches.</div>`;
-    }
-    html += `</div>`;
+    html += `<div id="restResults" style="display:none;"></div>`;
   }
 
   inner.innerHTML = html;
   document.getElementById('resultCount').textContent = `${results.length} result${results.length !== 1 ? 's' : ''}`;
 
-  // Wire ALL expand/collapse and original toggles at once (including hidden rest results)
-  inner.querySelectorAll('.compact-card').forEach(card => {
-    card.querySelector('.compact-header').addEventListener('click', () => {
-      card.classList.toggle('expanded');
-    });
-  });
-  inner.querySelectorAll('.toggle-original').forEach(btn => {
-    btn.addEventListener('click', e => {
-      e.stopPropagation();
-      const orig = btn.nextElementSibling;
-      const showing = orig.classList.contains('show');
-      orig.classList.toggle('show');
-      btn.textContent = showing ? 'Show original text' : 'Hide original text';
-    });
-  });
-  wireRxButtons(inner);
+  wireCards(inner);
 
-  // Wire show all (just toggles visibility, handlers already attached)
   const showAllBtn = document.getElementById('showAllBtn');
   if (showAllBtn) {
-    showAllBtn.addEventListener('click', () => {
-      const el = document.getElementById('restResults');
-      const showing = el.style.display !== 'none';
-      el.style.display = showing ? 'none' : 'block';
-      showAllBtn.textContent = showing ? 'Show All' : 'Hide';
-    });
+    wireLazyShowAll(showAllBtn, document.getElementById('restResults'), rest, query, 'rest', 100);
   }
 }
 
@@ -918,6 +990,9 @@ function renderCompactCard(item, query, id) {
   const parsed = parseConditionName(item.condition);
   const lines = getRemedyLines(item);
   const originalText = item.remedies.join('\n');
+  // Banerji sources first, so they survive the 2-tag limit below
+  const sources = item.sources.slice().sort((a, b) =>
+    (BANERJI_SRC_RE.test(b) ? 1 : 0) - (BANERJI_SRC_RE.test(a) ? 1 : 0));
 
   return `
   <div class="compact-card" data-id="${id}">
@@ -928,7 +1003,8 @@ function renderCompactCard(item, query, id) {
         ${parsed.desc ? `<div class="compact-desc">${hl(parsed.desc, query)}</div>` : ''}
       </div>
       <div class="compact-meta">
-        ${item.sources.length ? `<div class="compact-sources">${item.sources.slice(0,2).map(s =>
+        ${isBanerji(item) ? `<span class="bp-tag" title="Banerji Protocol">BP</span>` : ''}
+        ${sources.length ? `<div class="compact-sources">${sources.slice(0,2).map(s =>
           `<span class="source-tag" title="${escAttr(getAbbrevTitle(s))}">${s}</span>`).join('')}</div>` : ''}
         <span class="compact-count">${lines.length} remedy${lines.length !== 1 ? 's' : ''}</span>
         <span class="compact-arrow">&#9654;</span>
@@ -968,7 +1044,7 @@ function renderCards(items, query) {
   }).join('');
   if (items.length > 50) {
     html += `<div style="text-align:center;padding:20px;">
-      <button id="loadMoreBtn" style="background:var(--accent);color:#fff;border:none;border-radius:8px;padding:10px 28px;cursor:pointer;font-size:14px;font-weight:600;">
+      <button id="loadMoreBtn" style="background:var(--accent);color:var(--on-accent);border:none;border-radius:8px;padding:10px 28px;cursor:pointer;font-size:14px;font-weight:600;">
         Show More (${items.length - 50} remaining)
       </button></div>`;
   }
@@ -1065,7 +1141,7 @@ function renderHome() {
   document.querySelectorAll('.quick-search[data-q]').forEach(el => {
     el.addEventListener('click', () => {
       document.getElementById('searchInput').value = el.dataset.q;
-      onSearch();
+      commitSearchInput();
     });
   });
   document.querySelectorAll('.quick-search[data-ref]').forEach(el => {
@@ -1082,31 +1158,9 @@ function renderHome() {
 // --- Multi-symptom state ---
 let activeTerms = []; // [{text, on}]
 
-function onSearch() {
-  const raw = document.getElementById('searchInput').value;
-  const clearBtn = document.getElementById('searchClear');
-  clearBtn.classList.toggle('show', raw.trim().length > 0);
-
-  // Detect comma = user finished typing a term
-  if (!raw.includes(',')) return; // wait for comma or Enter
-
-  const parts = raw.split(',').map(s => s.trim()).filter(Boolean);
-  if (!parts.length) return;
-
-  // Add new terms (skip duplicates)
-  parts.forEach(p => {
-    if (p && !activeTerms.find(t => t.text.toLowerCase() === p.toLowerCase())) {
-      activeTerms.push({ text: p, on: true });
-    }
-  });
-
-  document.getElementById('searchInput').value = '';
-  clearBtn.classList.remove('show');
-  runMultiSearch();
-}
-
-function onSearchEnter(e) {
-  if (e.key !== 'Enter') return;
+// Turn whatever is in the search box into active terms and run the search.
+// Shared by Enter, the comma shortcut, and the quick-search chips.
+function commitSearchInput() {
   const raw = document.getElementById('searchInput').value.trim();
   if (!raw) return;
   raw.split(',').map(s => s.trim()).filter(Boolean).forEach(p => {
@@ -1117,6 +1171,54 @@ function onSearchEnter(e) {
   document.getElementById('searchInput').value = '';
   document.getElementById('searchClear').classList.remove('show');
   runMultiSearch();
+}
+
+const LIVE_MIN_CHARS = 2; // 1 char matches most of the book — not worth rendering
+
+// Runs on every keystroke (debounced).
+function onSearch() {
+  const raw = document.getElementById('searchInput').value;
+  const q = raw.trim();
+  document.getElementById('searchClear').classList.toggle('show', q.length > 0);
+
+  // A comma means the user finished a term — commit it as a chip.
+  if (raw.includes(',')) { commitSearchInput(); return; }
+
+  // Otherwise preview results for what's been typed so far.
+  if (q.length >= LIVE_MIN_CHARS) {
+    livePreview(q);
+  } else if (activeTerms.filter(t => t.on).length) {
+    runMultiSearch();          // fall back to the committed symptoms
+  } else if (currentView !== 'home') {
+    showHomeContent();
+  }
+}
+
+function livePreview(q) {
+  // With symptoms already pinned, show the draft as an extra group alongside them.
+  if (activeTerms.filter(t => t.on).length) { runMultiSearch(q); return; }
+
+  activeLetter = null;
+  currentView = 'search';
+  setHomeBtn(true);
+  document.querySelectorAll('.letter-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('chipsBar').innerHTML = '';
+  document.getElementById('sidebarList').innerHTML = '';
+
+  const results = findMatches(q.toLowerCase());
+  if (!results.length) {
+    document.getElementById('contentInner').innerHTML =
+      `<div style="text-align:center;padding:60px 20px;color:var(--text2);font-size:14px">
+         No results for &ldquo;${escHtml(q)}&rdquo;.</div>`;
+    document.getElementById('resultCount').textContent = '0 results';
+    return;
+  }
+  renderSearchResults(results, q);
+}
+
+function onSearchEnter(e) {
+  if (e.key !== 'Enter') return;
+  commitSearchInput();
 }
 
 function renderChips() {
@@ -1141,14 +1243,16 @@ function renderChips() {
   });
 }
 
-function runMultiSearch() {
+// `draft` is text still being typed — shown as a provisional group but not yet a chip.
+function runMultiSearch(draft) {
   activeLetter = null;
   currentView = 'search';
   setHomeBtn(true);
   document.querySelectorAll('.letter-btn').forEach(b => b.classList.remove('active'));
   renderChips();
 
-  const onTerms = activeTerms.filter(t => t.on);
+  const onTerms = activeTerms.filter(t => t.on)
+    .concat(draft ? [{ text: draft, on: true, draft: true }] : []);
   if (!onTerms.length) {
     document.getElementById('contentInner').innerHTML = `<div style="text-align:center;padding:60px;color:var(--text2)">All symptoms toggled off — turn one back on to see results.</div>`;
     document.getElementById('resultCount').textContent = '';
@@ -1160,12 +1264,11 @@ function runMultiSearch() {
   let allHtml = '';
   let totalCount = 0;
 
-  onTerms.forEach(term => {
+  const pending = []; // rest-lists to wire up after innerHTML lands
+
+  onTerms.forEach((term, gi) => {
     const ql = term.text.toLowerCase();
-    const results = DATA.remedies.filter(r =>
-      r.condition.toLowerCase().includes(ql) ||
-      r.remedies.some(rem => rem.toLowerCase().includes(ql))
-    );
+    const results = findMatches(ql);
     const scored = results.map(r => ({ item: r, score: scoreResult(r, ql) }));
     scored.sort((a, b) => b.score - a.score);
     totalCount += results.length;
@@ -1175,52 +1278,36 @@ function runMultiSearch() {
 
     allHtml += `<div class="symptom-group" data-term="${escAttr(term.text)}">`;
     allHtml += `<div class="symptom-group-label">
-      <span class="symptom-chip-inline">${term.text}</span>
-      <span style="color:var(--text2);font-size:11px">${results.length} result${results.length !== 1 ? 's' : ''}</span>
+      <span class="symptom-chip-inline${term.draft ? ' draft' : ''}">${escHtml(term.text)}</span>
+      <span style="color:var(--text2);font-size:11px">${results.length} result${results.length !== 1 ? 's' : ''}${
+        term.draft ? ' &middot; press Enter to keep' : ''}</span>
     </div>`;
 
     if (!results.length) {
-      allHtml += `<div style="padding:12px 0;color:var(--text2);font-size:13px">No results found for "${term.text}".</div>`;
+      allHtml += `<div style="padding:12px 0;color:var(--text2);font-size:13px">No results found for "${escHtml(term.text)}".</div>`;
     } else {
-      allHtml += top.map((s, i) => renderCompactCard(s.item, term.text, `${ql}-top-${i}`)).join('');
+      allHtml += top.map((s, i) => renderCompactCard(s.item, term.text, `g${gi}-top-${i}`)).join('');
       if (rest.length) {
         allHtml += `<div class="search-section-label" style="margin-top:8px">
           More Specific Results (${rest.length})
-          <button class="show-all-btn" data-target="rest-${ql}">Show All</button>
+          <button class="show-all-btn" data-target="rest-g${gi}">Show All</button>
         </div>`;
-        allHtml += `<div id="rest-${CSS.escape(ql)}" style="display:none">`;
-        allHtml += rest.slice(0, 80).map((s, i) => renderCompactCard(s.item, term.text, `${ql}-rest-${i}`)).join('');
-        allHtml += `</div>`;
+        allHtml += `<div id="rest-g${gi}" style="display:none"></div>`;
+        pending.push({ gi, rest, text: term.text });
       }
     }
     allHtml += `</div>`;
   });
 
   inner.innerHTML = allHtml;
-  document.getElementById('resultCount').textContent = `${activeTerms.filter(t=>t.on).length} symptom${activeTerms.filter(t=>t.on).length !== 1 ? 's' : ''}`;
+  document.getElementById('resultCount').textContent = `${onTerms.length} symptom${onTerms.length !== 1 ? 's' : ''}`;
 
-  // Wire all expand/collapse
-  inner.querySelectorAll('.compact-card').forEach(card => {
-    card.querySelector('.compact-header').addEventListener('click', () => card.classList.toggle('expanded'));
+  wireCards(inner);
+  pending.forEach(p => {
+    const btn = inner.querySelector(`.show-all-btn[data-target="rest-g${p.gi}"]`);
+    const container = document.getElementById(`rest-g${p.gi}`);
+    if (btn && container) wireLazyShowAll(btn, container, p.rest, p.text, `g${p.gi}-rest`, 80);
   });
-  inner.querySelectorAll('.toggle-original').forEach(btn => {
-    btn.addEventListener('click', e => {
-      e.stopPropagation();
-      const orig = btn.nextElementSibling;
-      orig.classList.toggle('show');
-      btn.textContent = orig.classList.contains('show') ? 'Hide original text' : 'Show original text';
-    });
-  });
-  inner.querySelectorAll('.show-all-btn[data-target]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const el = document.getElementById(btn.dataset.target);
-      if (!el) return;
-      const showing = el.style.display !== 'none';
-      el.style.display = showing ? 'none' : 'block';
-      btn.textContent = showing ? 'Show All' : 'Hide';
-    });
-  });
-  wireRxButtons(inner);
 
   document.getElementById('sidebarList').innerHTML = '';
 }
@@ -1303,7 +1390,7 @@ function hl(text, query) {
 }
 function escAttr(s) { return s.replace(/"/g, '&quot;').replace(/</g, '&lt;'); }
 function escHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-function truncate(s, n) { return s.length > n ? s.substring(0, n) + 'â€¦' : s; }
+function truncate(s, n) { return s.length > n ? s.substring(0, n) + '…' : s; }
 function debounce(fn, ms) { let t; return function(...a) { clearTimeout(t); t = setTimeout(() => fn.apply(this, a), ms); }; }
 </script>
 </body>
