@@ -165,9 +165,21 @@ body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); co
 }
 
 /* --- Courses --- */
+.collapse-toggle {
+  display: flex; align-items: center; gap: 8px; cursor: pointer;
+  user-select: none; transition: color .15s;
+}
+.collapse-toggle:hover { color: var(--accent2); }
+.collapse-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 4px; }
+.collapse-arrow { font-size: 9px; transition: transform .2s; display: inline-block; }
+.collapse-toggle.open .collapse-arrow { transform: rotate(90deg); }
+.collapse-hint { font-weight: 400; text-transform: none; letter-spacing: 0; opacity: .7; }
+
 .course-grid {
   display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 10px;
 }
+/* display:grid above would otherwise beat the UA stylesheet's [hidden] rule */
+.course-grid[hidden] { display: none; }
 .course-card {
   background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
   padding: 14px; cursor: pointer; box-shadow: var(--shadow);
@@ -1190,20 +1202,6 @@ function renderHome() {
         <p>A comprehensive homeopathic remedy reference. Browse by letter, search by condition or remedy name, or explore the reference guides below.</p>
       </div>
       <div class="home-section">
-        <h3>Browse by Course</h3>
-        <div class="course-grid">
-          ${COURSES.map(c => `
-            <div class="course-card" data-course="${escAttr(c.code)}">
-              <div class="course-card-top">
-                <span class="course-code">${c.code}</span>
-                ${c.date ? `<span class="course-year">${c.date}</span>` : ''}
-              </div>
-              <div class="course-name">${escHtml(c.name)}</div>
-              <div class="course-count">${c.count.toLocaleString()} conditions</div>
-            </div>`).join('')}
-        </div>
-      </div>
-      <div class="home-section">
         <h3>Browse by Letter</h3>
         <div class="quick-letters">
           ${letters.map(l => `<div class="quick-letter" data-letter="${l}">${l}<span class="ql-count">${letterCounts[l]}</span></div>`).join('')}
@@ -1224,7 +1222,39 @@ function renderHome() {
           <div class="quick-search" data-ref="cs">Cell Salt Combinations</div>
         </div>
       </div>
+      <div class="home-section">
+        <h3 class="collapse-toggle" id="coursesToggle" role="button" tabindex="0"
+            aria-expanded="false" aria-controls="courseGrid">
+          <span class="collapse-arrow">&#9654;</span>
+          Browse by Course
+          <span class="collapse-hint">${COURSES.length} courses</span>
+        </h3>
+        <div class="course-grid" id="courseGrid" hidden>
+          ${COURSES.map(c => `
+            <div class="course-card" data-course="${escAttr(c.code)}">
+              <div class="course-card-top">
+                <span class="course-code">${c.code}</span>
+                ${c.date ? `<span class="course-year">${c.date}</span>` : ''}
+              </div>
+              <div class="course-name">${escHtml(c.name)}</div>
+              <div class="course-count">${c.count.toLocaleString()} conditions</div>
+            </div>`).join('')}
+        </div>
+      </div>
     </div>`;
+
+  const coursesToggle = document.getElementById('coursesToggle');
+  const courseGrid = document.getElementById('courseGrid');
+  const toggleCourses = () => {
+    const open = courseGrid.hidden;
+    courseGrid.hidden = !open;
+    coursesToggle.classList.toggle('open', open);
+    coursesToggle.setAttribute('aria-expanded', String(open));
+  };
+  coursesToggle.addEventListener('click', toggleCourses);
+  coursesToggle.addEventListener('keydown', e => {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleCourses(); }
+  });
 
   document.querySelectorAll('.course-card').forEach(el => {
     el.addEventListener('click', () => selectCourse(el.dataset.course));
